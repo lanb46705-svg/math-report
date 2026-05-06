@@ -1,0 +1,1234 @@
+<!DOCTYPE html> 
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>四升五入学数学分层测评评估报告生成器</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Chart.js + datalabels -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+
+  <!-- SheetJS -->
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
+  <!-- html2pdf：批量导出每人一个PDF -->
+  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
+
+  <style>
+    /* 现代苹果风设计重置 */
+    :root {
+      --primary: #007AFF; /* Apple Blue */
+      --primary-light: #E5F1FF;
+      --success: #34C759;
+      --warning: #FF9F0A;
+      --danger: #FF3B30;
+      --danger-light: #FFECEB;
+      --text-main: #1D1D1F;
+      --text-secondary: #86868B;
+      --bg-body: #F5F5F7;
+    }
+
+    * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    
+    body {
+      background-color: var(--bg-body);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* 滚动条美化 */
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #D2D2D7; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #86868B; }
+
+    /* A4 页面容器，屏幕上显示为柔和悬浮卡片 */
+    .a4-page {
+      width: 210mm;
+      height: 297mm;
+      background: #ffffff;
+      padding: 15mm 18mm;
+      margin: 0 auto 30px auto;
+      position: relative;
+      overflow: hidden;
+      border-radius: 24px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0,0,0,0.02);
+    }
+
+    /* 导出模式去除屏幕样式 */
+    body.export-mode .a4-page {
+      margin: 0 !important;
+      box-shadow: none !important;
+      border: none !important;
+      border-radius: 0 !important;
+    }
+
+    /* 现代 SaaS 风格表格 */
+    .modern-table { width: 100%; border-collapse: collapse; text-align: center; }
+    .modern-table th {
+      background-color: #F5F5F7;
+      color: var(--text-secondary);
+      font-weight: 600;
+      padding: 12px 8px;
+      font-size: 0.75rem;
+      border-bottom: 1px solid #E5E5EA;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+    }
+    .modern-table td {
+      padding: 12px 8px;
+      border-bottom: 1px solid #F2F2F7;
+      color: var(--text-main);
+      font-size: 0.85rem;
+      transition: background-color 0.2s ease;
+    }
+    .modern-table tr:hover td { background-color: #FAFAFC; }
+    .modern-table tr:last-child td { border-bottom: none; }
+
+    /* 玻璃拟物特效 */
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    @media print {
+      body { background: none !important; padding: 0 !important; margin: 0 !important; }
+      .no-print { display: none !important; }
+      .a4-page {
+        margin: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        page-break-after: always !important;
+        page-break-inside: avoid !important;
+        width: 210mm !important;
+        height: 296.5mm !important;
+        padding: 15mm 18mm !important;
+      }
+      @page { size: A4 portrait; margin: 0; }
+      .pie-print-wrap { display:flex !important; justify-content:center !important; align-items:center !important; }
+      #chartPie { max-width: 100% !important; }
+    }
+  </style>
+</head>
+
+<body class="flex flex-col xl:flex-row p-4 lg:p-8 gap-8 justify-center items-start">
+
+  <!-- 左侧数据控制台 (现代化侧边栏) -->
+  <div class="w-full xl:w-80 glass-panel shadow-2xl p-6 h-fit no-print flex-shrink-0 sticky top-8 rounded-3xl z-50">
+    <div class="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+      <div class="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+        </svg>
+      </div>
+      <h2 class="text-[17px] font-semibold text-gray-900 tracking-tight">成绩录入控制台</h2>
+    </div>
+
+    <form id="scoreForm" class="space-y-5">
+      <div>
+        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">学员姓名</label>
+        <input type="text" id="stuName" value="廖和义" oninput="generateReport()"
+               class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 text-sm font-medium text-gray-900 transition-all">
+      </div>
+
+      <!-- 模块分数动态容器 -->
+      <div>
+        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">全卷 15 道题明细录入</label>
+        <div class="bg-gray-50/50 p-2 rounded-2xl border border-gray-100">
+          <div id="question-inputs" class="max-h-[40vh] overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+            <!-- JS 动态填入输入框 -->
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-2 space-y-3">
+        <button type="button" onclick="window.print()"
+                class="w-full bg-blue-600 text-white font-semibold py-3 rounded-xl shadow-lg shadow-blue-600/20 hover:bg-blue-700 hover:shadow-blue-600/30 hover:-translate-y-0.5 active:translate-y-0 transition-all flex justify-center items-center gap-2 text-sm">
+          打印 / 导出 PDF
+        </button>
+
+        <button type="button" onclick="exportAllStudentsPDF()"
+          class="w-full bg-gray-900 text-white font-semibold py-3 rounded-xl shadow-lg shadow-gray-900/10 hover:bg-black hover:shadow-gray-900/20 hover:-translate-y-0.5 active:translate-y-0 transition-all flex justify-center items-center gap-2 text-sm">
+          一键批量导出所有 PDF
+        </button>
+      </div>
+    </form>
+
+    <!-- 批量导入模块 -->
+    <div class="mt-8 pt-6 border-t border-gray-100">
+      <h3 class="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+        <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+        </svg>
+        Excel 批量处理
+      </h3>
+
+      <div class="bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
+        <p class="text-[10px] text-gray-500 leading-relaxed mb-3">
+          要求 16 列数据：<br>
+          <strong class="text-blue-600 font-medium">姓名 | 题1 | 题2 | ... | 题15</strong>
+        </p>
+
+        <label for="excelFile" class="flex flex-col items-center justify-center w-full h-20 border-2 border-blue-200 border-dashed rounded-xl cursor-pointer bg-white hover:bg-blue-50 transition-colors">
+          <div class="flex items-center justify-center gap-2">
+            <svg class="w-5 h-5 text-blue-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2" />
+            </svg>
+            <span class="text-xs font-semibold text-blue-600">点击选择 Excel 文件</span>
+          </div>
+          <input id="excelFile" type="file" class="hidden" accept=".xlsx, .xls, .csv" onchange="handleFileUpload(event)" />
+        </label>
+      </div>
+
+      <div id="batchNav" class="mt-4 hidden bg-gray-50 p-3 rounded-2xl border border-gray-100">
+        <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">快捷切换学员预览</label>
+        <select id="studentSelect" onchange="loadStudentData(this.value)" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/30">
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- 右侧：A4预览区 -->
+  <div class="flex-1 flex flex-col items-center">
+    <div id="pdf-wrapper" style="width: 210mm;" class="flex flex-col items-center">
+      
+      <!-- PAGE 1: 整体概览 -->
+      <div class="a4-page flex flex-col">
+        <!-- 现代页眉 -->
+        <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-100 flex-shrink-0">
+          <div class="flex items-center gap-2">
+            <div class="w-6 h-6 bg-[#007AFF] rounded-md flex items-center justify-center">
+              <span class="text-white font-bold text-[10px] leading-none">雪球</span>
+            </div>
+            <span class="font-bold text-gray-900 text-sm tracking-tight">Snowball Intelligence</span>
+          </div>
+          <div class="text-[10px] text-gray-400 font-medium tracking-widest uppercase">Mathematics Assessment Report</div>
+        </div>
+
+        <!-- 极简标题区域 -->
+        <div class="mb-8 flex-shrink-0">
+          <h1 class="text-3xl font-bold text-[#1D1D1F] tracking-tight mb-2">四升五入学数学全真测评评估</h1>
+          <p class="text-sm text-[#86868B] font-medium">雪球素养教研中心 · 十五维核心能力综合测定</p>
+        </div>
+
+        <!-- 顶部核心数据卡片 (Apple Card 风格) -->
+        <div class="grid grid-cols-3 gap-4 mb-8 flex-shrink-0">
+          <div class="bg-gray-50 rounded-2xl p-5 flex flex-col items-start justify-center border border-gray-100">
+            <span class="text-[#86868B] text-xs font-semibold uppercase tracking-wider mb-1">学员姓名 Student</span>
+            <span class="text-2xl font-bold text-[#1D1D1F] stu-name-disp">廖和义</span>
+          </div>
+          <div class="bg-gray-50 rounded-2xl p-5 flex flex-col items-start justify-center border border-gray-100">
+            <span class="text-[#86868B] text-xs font-semibold uppercase tracking-wider mb-1">试卷总分 Total</span>
+            <span class="text-2xl font-bold text-[#1D1D1F]">100 <span class="text-sm font-medium text-gray-400">分</span></span>
+          </div>
+          <div class="bg-gradient-to-br from-[#007AFF] to-[#0051A8] rounded-2xl p-5 flex flex-col items-start justify-center text-white shadow-lg shadow-blue-500/20">
+            <span class="text-blue-100 text-xs font-semibold uppercase tracking-wider mb-1">测评得分 Score</span>
+            <div class="flex items-baseline gap-1">
+              <span id="repScore" class="text-4xl font-bold leading-none">100</span>
+              <span class="text-sm text-blue-200 font-medium">/100</span>
+            </div>
+          </div>
+        </div>
+
+        <h2 class="text-lg font-bold text-[#1D1D1F] tracking-tight mb-4 flex items-center gap-2 flex-shrink-0">
+          <div class="w-1.5 h-4 bg-[#007AFF] rounded-full"></div>
+          一、测评整体数据分析
+        </h2>
+
+        <div class="flex-1 flex flex-col gap-4 min-h-0">
+          <!-- 饼图区域 (玻璃卡片风格) -->
+          <div class="bg-white border border-gray-100 rounded-2xl p-5 flex flex-col shadow-sm flex-[1.1] min-h-0">
+            <div class="flex items-center justify-between mb-4 flex-shrink-0">
+              <h3 class="font-bold text-[#1D1D1F] text-sm">试卷能力维度分布</h3>
+              <span class="text-[10px] font-medium text-gray-400 bg-gray-50 px-2 py-1 rounded-full uppercase">Dimension</span>
+            </div>
+            <div class="flex flex-row items-center gap-6 flex-1 min-h-0">
+              <div class="w-[40%] relative pie-print-wrap flex justify-center items-center h-full">
+                <canvas id="chartPie"></canvas>
+              </div>
+              <div class="w-[60%] flex flex-col justify-center">
+                <p class="text-gray-600 text-[11px] leading-relaxed mb-3 text-justify">
+                  <strong class="text-gray-900 font-semibold block mb-1">考点体系覆盖</strong>
+                  雪球素养四年级数学全真评估涵盖了基础运算、代数思维、数论逻辑、几何空间以及实践应用五大核心能力维度。通过15道精心设计的梯度题型，我们能多层次、全方位地解析学生的真实理科素养。
+                </p>
+                <p class="text-gray-600 text-[11px] leading-relaxed m-0 text-justify">
+                  <strong class="text-gray-900 font-semibold block mb-1">选拔性试题特点</strong>
+                  本次测评集中了小学向初中过渡阶段的重难点。要求具备扎实的基本功、严密的逻辑推演能力以及解题方法的灵活迁移能力。整体难度较高，生成的逐题数据将为今后针对性辅导提供精准方向。
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 柱状图区域 (玻璃卡片风格) -->
+          <div class="bg-white border border-gray-100 rounded-2xl p-5 flex flex-col shadow-sm flex-[0.9] min-h-0">
+            <div class="flex items-center justify-between mb-2 flex-shrink-0">
+              <h3 class="font-bold text-[#1D1D1F] text-sm">总体得分大盘排位</h3>
+              <span class="text-[10px] font-medium text-gray-400 bg-gray-50 px-2 py-1 rounded-full uppercase">Cohort</span>
+            </div>
+            <div class="flex flex-col flex-1 min-h-0">
+              <div class="flex-1 w-full relative min-h-0 mb-3">
+                <canvas id="chartCohortBar"></canvas>
+              </div>
+              <div class="bg-blue-50/50 border border-blue-100 rounded-xl p-3 flex items-start gap-3 flex-shrink-0">
+                <div class="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center flex-shrink-0 text-blue-500">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                </div>
+                <div class="text-gray-700 text-[11px] leading-snug flex-1">
+                  <span class="stu-name-disp font-bold text-gray-900">廖和义</span> 
+                  同学本次总分为 <strong id="txtP1Score" class="text-[#007AFF] text-sm">100</strong> 分，
+                  当前所在区间：<strong id="txtP1Rank" class="text-gray-900 font-bold">加载中...</strong>。<br>
+                  <span id="txtP1Advice" class="block mt-1 text-gray-500">加载中...</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE 2: 五大维度深度解析 -->
+      <div class="a4-page flex flex-col">
+        <div class="flex justify-end pt-2 mb-6 border-b border-gray-100 pb-4">
+          <div class="text-[10px] text-gray-400 font-medium tracking-widest uppercase">Data Analysis & Modeling</div>
+        </div>
+
+        <h2 class="text-lg font-bold text-[#1D1D1F] tracking-tight mb-6 flex items-center gap-2">
+          <div class="w-1.5 h-4 bg-[#007AFF] rounded-full"></div>
+          二、五大核心维度数据解析
+        </h2>
+
+        <!-- 各维度得分对比 (现代轻量化表格) -->
+        <div class="bg-white border border-gray-100 rounded-2xl mb-6 shadow-sm overflow-hidden">
+          <div class="bg-gray-50 px-5 py-4 border-b border-gray-100 flex justify-between items-center">
+            <h3 class="font-bold text-[#1D1D1F] text-sm">各维度得分对比</h3>
+          </div>
+          <div class="p-5">
+            <table class="modern-table mb-6">
+              <thead>
+              <tr>
+                <th class="text-left pl-3" style="width: 14%;">测评维度</th>
+                <th style="width: 14%;">基础运算</th><th style="width: 14%;">代数思维</th><th style="width: 14%;">数论逻辑</th><th style="width: 14%;">几何空间</th><th style="width: 14%;">实践应用</th><th style="width: 16%; color: #007AFF;">总计</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <td class="text-left pl-3 font-medium text-gray-500 text-[11px]">满分值</td>
+                <td>24</td><td>20</td><td>26</td><td>14</td><td>16</td><td class="font-bold text-gray-900 bg-gray-50/50">100</td>
+              </tr>
+              <tr>
+                <td class="text-left pl-3 font-medium text-gray-500 text-[11px]">我的得分</td>
+                <td id="tdDimSc1" class="font-bold text-gray-900 text-base">24</td>
+                <td id="tdDimSc2" class="font-bold text-gray-900 text-base">20</td>
+                <td id="tdDimSc3" class="font-bold text-gray-900 text-base">26</td>
+                <td id="tdDimSc4" class="font-bold text-gray-900 text-base">14</td>
+                <td id="tdDimSc5" class="font-bold text-gray-900 text-base">16</td>
+                <td id="tdScTot" class="font-bold text-[#007AFF] text-lg bg-gray-50/50">100</td>
+              </tr>
+              <tr>
+                <td class="text-left pl-3 font-medium text-[#007AFF] text-[11px]">中位分</td>
+                <td id="tdMedian1" class="font-bold text-[#007AFF] text-xs">—</td>
+                <td id="tdMedian2" class="font-bold text-[#007AFF] text-xs">—</td>
+                <td id="tdMedian3" class="font-bold text-[#007AFF] text-xs">—</td>
+                <td id="tdMedian4" class="font-bold text-[#007AFF] text-xs">—</td>
+                <td id="tdMedian5" class="font-bold text-[#007AFF] text-xs">—</td>
+                <td id="tdMedianTot" class="font-bold text-[#007AFF] text-[13px] bg-blue-50/30">—</td>
+              </tr>
+              <tr>
+                <td class="text-left pl-3 font-medium text-purple-600 text-[11px]">众位分</td>
+                <td id="tdMode1" class="font-bold text-purple-600 text-xs">—</td>
+                <td id="tdMode2" class="font-bold text-purple-600 text-xs">—</td>
+                <td id="tdMode3" class="font-bold text-purple-600 text-xs">—</td>
+                <td id="tdMode4" class="font-bold text-purple-600 text-xs">—</td>
+                <td id="tdMode5" class="font-bold text-purple-600 text-xs">—</td>
+                <td id="tdModeTot" class="font-bold text-purple-600 text-[13px] bg-purple-50/30">—</td>
+              </tr>
+              <tr>
+                <td class="text-left pl-3 font-medium text-gray-400 text-[11px]">平均得分率</td>
+                <td id="tdAvg1" class="text-gray-500 text-[11px]">—</td>
+                <td id="tdAvg2" class="text-gray-500 text-[11px]">—</td>
+                <td id="tdAvg3" class="text-gray-500 text-[11px]">—</td>
+                <td id="tdAvg4" class="text-gray-500 text-[11px]">—</td>
+                <td id="tdAvg5" class="text-gray-500 text-[11px]">—</td>
+                <td id="tdAvgTot" class="text-gray-500 text-[11px] bg-gray-50/50">—</td>
+              </tr>
+              </tbody>
+            </table>
+            <div class="h-44 w-full"><canvas id="chartBar"></canvas></div>
+          </div>
+        </div>
+
+        <!-- 维度雷达分析 -->
+        <div class="bg-white border border-gray-100 rounded-2xl flex-shrink-0 shadow-sm overflow-hidden">
+          <div class="bg-gray-50 px-5 py-4 border-b border-gray-100 flex justify-between items-center">
+            <h3 class="font-bold text-[#1D1D1F] text-sm">能力模型雷达图</h3>
+          </div>
+          <div class="p-6 grid grid-cols-2 gap-8 items-center">
+            <div class="h-64 w-full relative flex justify-center items-center">
+              <canvas id="chartRadar"></canvas>
+            </div>
+            <div class="space-y-4">
+              <div class="bg-blue-50/50 p-4 rounded-2xl border border-blue-100 relative">
+                <div class="flex items-center gap-2 mb-1.5">
+                  <div class="w-2 h-2 rounded-full bg-[#007AFF]"></div>
+                  <div id="radarStrengthTitle" class="text-[13px] font-bold text-[#007AFF] tracking-wide">优势领跑：加载中...</div>
+                </div>
+                <p id="radarStrengthDesc" class="text-[11px] text-gray-600 leading-relaxed">加载中...</p>
+              </div>
+              <div class="bg-orange-50/50 p-4 rounded-2xl border border-orange-100 relative">
+                <div class="flex items-center gap-2 mb-1.5">
+                  <div class="w-2 h-2 rounded-full bg-[#FF9F0A]"></div>
+                  <div id="radarWeaknessTitle" class="text-[13px] font-bold text-[#FF9F0A] tracking-wide">进阶空间：加载中...</div>
+                </div>
+                <p id="radarWeaknessDesc" class="text-[11px] text-gray-600 leading-relaxed">加载中...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 动态诊断页占位 (将会由JS生成 Page 3, Page 4, Page 5) -->
+      <div id="diagnostic-pages-container" class="w-full flex flex-col items-center"></div>
+
+      <!-- PAGE 6：梯队对标与跳级规划 -->
+      <div class="a4-page flex flex-col" id="pageZhongKao">
+        <div class="flex justify-between items-center pt-2 mb-6 border-b border-gray-100 pb-4">
+          <div class="flex items-center gap-2">
+            <div class="w-6 h-6 bg-[#007AFF] rounded-md flex items-center justify-center">
+              <span class="text-white font-bold text-[10px] leading-none">雪球</span>
+            </div>
+            <span class="font-bold text-gray-900 text-sm tracking-tight">Snowball Intelligence</span>
+          </div>
+          <div class="text-[10px] text-gray-400 font-medium tracking-widest uppercase">Transition & Planning</div>
+        </div>
+
+        <h2 class="text-lg font-bold text-[#1D1D1F] tracking-tight mb-4 flex items-center gap-2">
+          <div class="w-1.5 h-4 bg-[#007AFF] rounded-full"></div>
+          四、小学升学梯队对标 · 雪球思维学习规划建议
+        </h2>
+
+        <!-- 核心规划 Banner -->
+        <div class="bg-orange-50 border border-orange-100 rounded-xl p-3 mb-6 flex items-start gap-2 shadow-sm">
+           <span class="text-orange-500 text-lg leading-none mt-0.5">🚀</span>
+           <p class="text-[12px] text-gray-800 font-semibold leading-snug">
+              核心规划：为更好地达成升学目标，建议<span class="text-orange-500 font-bold">酌情尝试跳级或超前学习</span>，匹配相应班型以合理规划进度。
+           </p>
+        </div>
+
+        <!-- 跳级规划表格 (使用 table-layout: fixed 和 word-wrap 防止溢出) -->
+        <div class="border border-blue-200 rounded-lg overflow-hidden mb-6 shadow-sm">
+          <table class="w-full text-center" style="font-size: 11px; table-layout: fixed; word-wrap: break-word;">
+            <thead class="bg-[#007AFF] text-white">
+              <tr>
+                <th class="py-3 px-1 font-semibold w-[9%] border-r border-blue-400 align-middle tracking-wider">梯队</th>
+                <th class="py-3 px-1 font-semibold w-[14%] border-r border-blue-400 align-middle tracking-wider">目标班型</th>
+                <th class="py-3 px-2 font-semibold w-[28%] border-r border-blue-400 align-middle text-left tracking-wider">考试进度</th>
+                <th class="py-3 px-1 font-semibold w-[18%] border-r border-blue-400 align-middle tracking-wider">匹配课程</th>
+                <th class="py-3 px-2 font-semibold w-[31%] align-middle text-left tracking-wider">规划完成阶段</th>
+              </tr>
+            </thead>
+            <tbody class="text-gray-700 bg-white">
+              <!-- 第1梯队 -->
+              <tr class="border-b border-blue-100 hover:bg-blue-50/20 transition-colors">
+                <td class="py-4 px-1 font-bold text-[#FF3B30] border-r border-blue-100 align-middle text-center">第 1 梯队</td>
+                <td class="py-4 px-1 font-semibold border-r border-blue-100 leading-snug align-middle text-center">Q班 (25人)<br>H8 (40人)<br>上汇 (15人)</td>
+                <td class="py-4 px-2 text-left border-r border-blue-100 leading-relaxed align-middle">
+                  <span class="font-bold text-gray-900">Q班/H8：</span>5暑学完初中重要知识 + 小奥
+                  <div class="h-1.5"></div>
+                  <span class="font-bold text-gray-900">上汇：</span>小奥全部 + 六上 + 部分六下<br>
+                  <span class="text-[10px] text-gray-500">(基础计算、方程)</span>
+                </td>
+                <td class="py-4 px-1 font-bold text-[#007AFF] border-r border-blue-100 align-middle text-center leading-relaxed">
+                  小学 G3-G5<br>【启能班】<br><span class="text-[10px] text-gray-500 font-normal">建议尝试跳级</span>
+                </td>
+                <td class="py-4 px-2 text-left leading-relaxed align-middle">
+                  <span class="font-bold text-gray-900">Q/H8班：</span>G3起步<span class="text-[#FF9F0A] font-bold">建议跳级</span>，G4学完G5内容，<br>5暑完成小奥+初中重要知识
+                  <div class="h-1.5"></div>
+                  <span class="font-bold text-gray-900">上汇：</span>G3起步<span class="text-[#FF9F0A] font-bold">建议跳级</span>，G5暑完成<br>小奥全部+六上+部分六下
+                </td>
+              </tr>
+              <!-- 第2梯队 -->
+              <tr class="border-b border-blue-100 bg-blue-50/40 hover:bg-blue-50/60 transition-colors">
+                <td class="py-4 px-1 font-bold text-[#FF9F0A] border-r border-blue-100 align-middle text-center">第 2 梯队</td>
+                <td class="py-4 px-1 font-semibold border-r border-blue-100 align-middle text-center leading-snug">H7 (+30)<br>SBL、L6</td>
+                <td class="py-4 px-2 text-left border-r border-blue-100 leading-relaxed align-middle">小奥全部 + 六上 + 部分六下<br><span class="text-[10px] text-gray-500">(基础计算、方程)</span></td>
+                <td class="py-4 px-1 font-bold text-[#007AFF] border-r border-blue-100 align-middle text-center leading-relaxed">
+                  小学 G3-G5<br>【启能班】<br><span class="text-[10px] text-gray-500 font-normal">建议尝试跳级</span>
+                </td>
+                <td class="py-4 px-2 text-left leading-relaxed align-middle">G3起步<span class="text-[#FF9F0A] font-bold">建议跳级</span>，G5学年内完成<br>小奥全部+六上+部分六下</td>
+              </tr>
+              <!-- 第3梯队 -->
+              <tr class="border-b border-blue-100 hover:bg-blue-50/20 transition-colors">
+                <td class="py-4 px-1 font-bold text-[#007AFF] border-r border-blue-100 align-middle text-center">第 3 梯队</td>
+                <td class="py-4 px-1 font-semibold border-r border-blue-100 align-middle text-center">SG</td>
+                <td class="py-4 px-2 text-left border-r border-blue-100 leading-relaxed align-middle">小奥全部 + 六上</td>
+                <td class="py-4 px-1 font-bold text-[#007AFF] border-r border-blue-100 align-middle text-center leading-relaxed">
+                  小学 G3-G5<br>【潜能进阶 / 启能班】<br><span class="text-[10px] text-gray-500 font-normal">建议尝试跳级</span>
+                </td>
+                <td class="py-4 px-2 text-left leading-relaxed align-middle">G3起步<span class="text-[#FF9F0A] font-bold">建议跳级</span>，G5学年内完成<br>小奥全部+六上</td>
+              </tr>
+              <!-- 其 它 -->
+              <tr class="bg-gray-50/80 hover:bg-gray-100/80 transition-colors">
+                <td class="py-4 px-1 font-bold text-gray-500 border-r border-blue-100 align-middle text-center">其 它</td>
+                <td class="py-4 px-1 font-semibold border-r border-blue-100 align-middle text-center leading-snug">公办学校<br>特色班</td>
+                <td class="py-4 px-2 text-left border-r border-blue-100 leading-relaxed align-middle">校内 + 六上</td>
+                <td class="py-4 px-1 font-bold text-[#007AFF] border-r border-blue-100 align-middle text-center leading-relaxed">
+                  小学 G3-G5<br>【潜能班】<br><span class="text-[10px] text-gray-500 font-normal">建议超前学习</span>
+                </td>
+                <td class="py-4 px-2 text-left leading-relaxed align-middle">G3起步<span class="text-[#FF9F0A] font-bold">建议超前</span>，G5学年内完成<br>校内核心+六上</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 个性化班型推荐建议 (重点强化) -->
+        <div class="flex-1 flex flex-col mb-6" id="classAdviceBox">
+             <!-- 内容将由 JS 动态注入更醒目的样式 -->
+             <p class="text-gray-400 font-medium text-xs">智能生成中...</p>
+        </div>
+
+        <!-- 底部引导说明 -->
+        <div class="bg-blue-50/50 rounded-xl p-4 text-center mt-auto flex-shrink-0 border border-blue-100/50">
+          <p class="text-[12px] font-bold text-[#007AFF] mb-2 tracking-wide">🌟 合理规划进度是达标关键 | 建议G3起步匹配对应班型，稳步达成目标</p>
+          <p class="text-[11px] text-gray-600 font-medium">💡 梯队越高，对进度的要求越高，建议按目标选班，稳步冲刺</p>
+        </div>
+
+        <!-- 底部徽标 (现代化印章) -->
+        <div class="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between flex-shrink-0">
+          <div>
+            <p class="text-gray-900 font-bold text-xs mb-1">Empowering the logical mind.</p>
+            <p class="text-gray-400 text-[9px] tracking-widest uppercase">Snowball · Science & Logic</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="text-right">
+              <p class="text-[9px] text-gray-400 font-bold uppercase mb-0.5 tracking-wider">Verified by</p>
+              <p class="text-[11px] font-bold text-gray-900">雪球教研中心</p>
+            </div>
+            <div class="w-10 h-10 border-2 border-blue-100 bg-blue-50 rounded-full flex items-center justify-center text-[#007AFF] shadow-sm">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // ====== 15道题的核心题库映射表 ======
+  const QUESTION_MAP = [
+    {
+      label: "一、直接写出得数", max: 8, difficulty: "★★★",
+      focus: "聚焦小学口算与心算能力，检测小数、分数四则运算的熟练度与数感。",
+      levels: [
+        { min: 8, expert: "计算基本功扎实，数感好，且具备良好的审题定力，能规避连乘除运算易错点。", review: "保持常规练习防手生。可将更多精力倾斜到应用题代数解法及高阶思维模型的预习上。" },
+        { min: 7, expert: "受题目刻意设置的数字干扰（如7.9×0.8÷7.9×0.8），同级运算规则把控不坚决。", review: "强调“运算符号优先于数字特征”。建议整理计算易错题本，纠正盲目结合习惯。" },
+        { min: 4, expert: "缺乏“凑整”意识（如未观察到12.5与0.8组合），导致计算繁琐，容易出错。", review: "培养做题前“先观察、后动笔”习惯。训练寻找“好朋友数”，规范草稿书写。" },
+        { min: 0, expert: "在基础计算上存在薄弱环节，对分小互化等基本功不够熟练，容易对笔算产生过度依赖。", review: "暂缓难度大的拓展训练，每天坚持10-15分钟基础口算，熟记“分小互化表”。" }
+      ]
+    },
+    {
+      label: "二、竖式计算", max: 8, difficulty: "★★★",
+      focus: "考查小数乘除法的底层算理（商不变性质、小数点移动规律），检测笔算严谨度。",
+      levels: [
+        { min: 8, expert: "计算步骤严密无疏漏，理解算理且执行力高，是后续解答复杂应用题的有力保障。", review: "继续保持优秀的打草稿习惯。学有余力可尝试带未知数的“竖式谜题”，锻炼逻辑推理。" },
+        { min: 4, expert: "算理方向正确，但细节执行出现疏漏，如商中间漏0、小数点点错位置或纯退位减法失误。", review: "引入“估算检验法”。每次算出精确值后，用简单估算来反推结果是否合理，规避离谱错误。" },
+        { min: 0, expert: "对小数乘除法的核心算理掌握不够清晰，尤其在“商不变性质”和移动对位上存在混淆。", review: "通过“讲题”方式重温算理。重点梳理小数点如何移位、数位如何对齐的过程，夯实底层逻辑。" }
+      ]
+    },
+    {
+      label: "三、递等式计算", max: 8, difficulty: "★★★",
+      focus: "考查混合运算及分配律、结合律的应用，检测统筹思维和代数变形基础。",
+      levels: [
+        { min: 8, expert: "具备良好的全局视野和代数变形潜质，能准确洞察数字结构，精准匹配最优简算方法。", review: "掌握得很好。可以适当超前接触初一的有理数四则混合运算，适应含有负号的长算式推导。" },
+        { min: 4, expert: "具备一定的简算意识，但在面对“去括号变号”或隐蔽的乘法分配律变形时容易出错。", review: "针对性练习去括号和添括号的变号法则。这是后续初中理科学习的关键基础，需要打牢。" },
+        { min: 0, expert: "运算全局观略显不足，习惯按顺序逐步计算，未能在式子中灵活运用分配律及其逆运算。", review: "从基础的“提取公因数”练起。要求做递等式前，先标明“准备使用哪种运算律”，谋定而后动。" }
+      ]
+    },
+    {
+      label: "四、解方程", max: 8, difficulty: "★★★★",
+      focus: "初等代数核心基础，考查等式性质及整体代换思想，评估小初衔接。",
+      levels: [
+        { min: 8, expert: "代数基础牢固，移项、合并同类项、去括号等步骤清晰，已完成算术到代数的跨越。", review: "扩大方程应用范围。训练使用方程思路来解决复杂的和差倍应用题，进一步巩固代数优势。" },
+        { min: 4, expert: "掌握基本解法，但面对带括号的嵌套结构时缺乏“整体代换”思维，导致拆解混乱。", review: "训练“剥洋葱”式解题法。引导将括号内部分视作整体，由外向内逐层剥解，严格规范格式。" },
+        { min: 0, expert: "思维模式仍以小学的顺向算术为主，对等式的基本性质和“移项变号”操作不够熟悉。", review: "借助“天平模型”重新讲解等式两边同时加减乘除的原理，从基础一步方程开始扎实基本功。" }
+      ]
+    },
+    {
+      label: "五、精确度逆推", max: 6, difficulty: "★★★",
+      focus: "考查近似数的逆向求值域能力，检测思维严密性和对边界的把控力。",
+      levels: [
+        { min: 6, expert: "逆向逻辑严密，对数字区间的极值边界把控精准，体现了非常严谨的数学素养。", review: "知识点已通透，可以进一步接触简单的数论极值讨论题，保持逻辑思维的活跃度。" },
+        { min: 3, expert: "对近似数概念有一定理解，但在寻找极限值时往往会出现单侧失误（尤其极小值临界点）。", review: "强化“四舍五入”边界条件记忆。得出最大或最小值后，顺向进行一次“四舍五入”自我验证。" },
+        { min: 0, expert: "顺向计算掌握较好，但在逆向推导时缺乏区间概念的直观想象，容易出现思路卡壳。", review: "遇到此类题型，建议在草稿纸上画出“数轴”标出范围，将抽象逻辑转化为直观图形辅助理解。" }
+      ]
+    },
+    {
+      label: "六、小数点移动", max: 4, difficulty: "★★★",
+      focus: "检测小数点动态位移规律及乘除法十进制缩放的底层逻辑。",
+      levels: [
+        { min: 4, expert: "熟练掌握小数点移动法则，不受连续操作的干扰，十进制的基础概念非常扎实。", review: "可以将这一技能融入到面积（如平方米与平方分米）、体积等单位的综合换算中进行实战。" },
+        { min: 0, expert: "对十进制的位值概念掌握不够扎实，在面对连续多次的小数点移动时容易产生混淆。", review: "初期放弃纯心算，采用“画弧线定位法”，小数点每移动一位就画一个标记，空位规范补0。" }
+      ]
+    },
+    {
+      label: "七、质数与乘积", max: 4, difficulty: "★★★★",
+      focus: "考查质数及“和同近积大”的数学极值规律，初中数论前置重点。",
+      levels: [
+        { min: 4, expert: "知识储备扎实，且能灵活运用极值规律，展现出良好的数学感和数论入门潜质。", review: "可以开始接触“分解质因数”的综合应用（如求约数个数、完全平方数等）等数论拓展板块。" },
+        { min: 2, expert: "知道寻找质数，但解题缺乏“穷举并对比”习惯，往往试出一组后便直接作答。", review: "养成“列举法”习惯。把所有符合条件的组合写出来，比对后再得出最大值，确保思考全面。" },
+        { min: 0, expert: "质数概念记忆不牢固，且未掌握“两数和相同，差越小积越大”的规律。", review: "巩固100以内质数记忆。通过列举简单数字的拆分，直观感受乘积变化的规律。" }
+      ]
+    },
+    {
+      label: "八、字母公因数", max: 4, difficulty: "★★★★",
+      focus: "结合分解质因数与代数符号，考查从算术向代数过渡的抽象能力。",
+      levels: [
+        { min: 4, expert: "能够透过乘法算式准确找出公共因数，具备良好的结构化思维，对初中代数非常有帮助。", review: "代数感知力优秀，可以适当预习初一整式加减或简单的“提公因式”概念。" },
+        { min: 0, expert: "对于用字母表示数的抽象形式还比较陌生，尚未习惯将字母当作具体的数值进行结构分析。", review: "日常练习中多引导使用字母代替数字进行推导，强化“字母也是数”的观念，适应抽象思维。" }
+      ]
+    },
+    {
+      label: "九、靠墙篱笆", max: 6, difficulty: "★★★★★",
+      focus: "结合图形转化与场景，考查几何图感、面积推演及审题能力。",
+      levels: [
+        { min: 6, expert: "能准确识别隐蔽的几何特征，且审题仔细，规避了单位换算的易错点，综合素养好。", review: "具备应对复杂几何题能力，可适当挑战带有多重辅助线的组合图形面积问题（如蝴蝶模型）。" },
+        { min: 3, expert: "图形分析和计算均正确，但忽视了最终要求的“平均每平方米”条件，因审题不周导致失分。", review: "强调“回头看”审题习惯。阅读时将最后一句问题中的单位或关键条件圈画，解答完再核对。" },
+        { min: 0, expert: "几何敏感度有待提升，未能从45度角这一关键信息中识别出隐含的“等腰直角三角形”特征。", review: "增加基础图形特征识别训练。引导尝试用“补全法”（如补为正方形）来辅助理解边长关系。" }
+      ]
+    },
+    {
+      label: "十、积与公倍数", max: 4, difficulty: "★★★★",
+      focus: "考查数论拓展定律（两数之积=最大公因数×最小公倍数），课外拔高考点。",
+      levels: [
+        { min: 4, expert: "知识面较广，对课外拓展定律有所积累，说明平时的数学素养拓展做得比较扎实。", review: "继续拓宽数论板块的认知，可切入带余除法的综合应用或简单的同余定理。" },
+        { min: 0, expert: "属于正常的知识盲区。可能之前没有接触过这条数论定理，因此无法找到解题突破口。", review: "补充讲解该定理。通过具体数字，结合分解质因数的方法推演一遍，助其“知其然更知所以然”。" }
+      ]
+    },
+    {
+      label: "十一、几何模型", max: 8, difficulty: "★★★★★",
+      focus: "结合初中相似模型（或小学面积等高比例模型），检测空间推导能力。",
+      levels: [
+        { min: 8, expert: "空间几何思维非常出色，能灵活运用比例线段推导图形边长，具备出色的逻辑转化能力。", review: "几何板块可以继续拓展，尝试接触包含动点问题的图形解析或基础的几何证明思路。" },
+        { min: 4, expert: "具备良好的几何直觉能看出比例，但在列出对应边或计算内项外项方程时不够严谨出错。", review: "强化“对应边法则”。要求用不同颜色标注对应线段避免凭感觉列式；加强比例方程解法。" },
+        { min: 0, expert: "对平行线产生的线段比例关系缺乏认知。这是多数五年级学生常态，未系统接触相关模型。", review: "建议通过小学阶段的“一半模型/共角三角形模型”进行面积与线段比例推导，或预习相似知识。" }
+      ]
+    },
+    {
+      label: "十二、流水行船", max: 8, difficulty: "★★★★★",
+      focus: "综合行程应用题，考查多变量（船速、水速、顺逆流）模型的构建能力。",
+      levels: [
+        { min: 8, expert: "思路清晰，能有条不紊地拆解多重变量的行程问题，展现了优秀的逻辑推演功底。", review: "常规行程问题已基本过关。可尝试挑战流水行船与相遇追及相结合的综合应用题。" },
+        { min: 4, expert: "能够计算单一的速度，但在组合总时间或衔接多段行程时逻辑出现断层，统筹能力不足。", review: "推荐使用“列表法”。将顺逆水的路程、速度、时间分别填入表格，直观梳理已知与未知关系。" },
+        { min: 0, expert: "对“顺逆水速度=静水速度±水速”多变量模型理解不清，未能理顺“往返”路程关系。", review: "避免死记硬背公式。画出动态线段图，分步拆解顺流和逆流过程，转化为基础行程问题分析。" }
+      ]
+    },
+    {
+      label: "十三、方程应用", max: 8, difficulty: "★★★★",
+      focus: "检测数学建模转译能力，将复杂文字描述转化为代数方程。",
+      levels: [
+        { min: 8, expert: "能熟练运用方程作为工具解决应用题，完全摆脱算术思维局限，代数建模能力强。", review: "建议引入二元一次方程组的初步概念，用以解决更复杂的变形应用题，进一步拓展代数优势。" },
+        { min: 4, expert: "能设未知数列方程，但易出现倍数关系对应错误（如乘错对象），或计算失误。", review: "强调“顺向翻译法”，题目怎么描述就怎么列式。解答完毕后要求将答案代入原题口头验算。" },
+        { min: 0, expert: "在阅读理解与数学符号转译上遇到困难，难以将“比…的几倍少几”抽象为等式。", review: "退回基础训练。鼓励朗读题目，用横线划出含有倍数关系的“关键句”，反复练习“找等量关系”。" }
+      ]
+    },
+    {
+      label: "十四、工程问题", max: 8, difficulty: "★★★★★",
+      focus: "对“单位1”的抽象理解力及交替合作过程的统筹计算。",
+      levels: [
+        { min: 8, expert: "对抽象概念理解深刻，面对分段交替这种复杂逻辑也能条理清晰地推算，统筹推演力极佳。", review: "可进一步接触含有“中途休息、效率变化、多人轮流”等进阶变式工程题，锻炼高阶思维。" },
+        { min: 4, expert: "理解基本工作效率概念，但在处理“先后交接、分段合作”的时间轴逻辑时容易混淆。", review: "强制推行“画时间轴”方法。按时间顺序画出线段，标清每段是谁在做、做了多少、还剩多少。" },
+        { min: 0, expert: "对将工作总量看作抽象的“单位1”难以适应，缺乏实体数字支撑导致无法下手。", review: "采用“具象化过渡法”。起初将总量假设为一个好算公倍数，理解效率后，再逐步过渡到使用“1”。" }
+      ]
+    },
+    {
+      label: "十五、压轴同余问题", max: 8, difficulty: "★★★★★",
+      focus: "全卷压轴题，考查数论同余模型（余同问题），甄别知识广度与逻辑。",
+      levels: [
+        { min: 8, expert: "能熟练运用公倍数加余数的规律准确解答，说明具备出色的数理逻辑、知识储备及规律总结能力。", review: "保持对数学钻研的兴趣。可适度接触历年综合拓展卷中的新颖压轴题，培养陌生题型拆解能力。" },
+        { min: 4, expert: "具备很好的探索精神，找出了第一个符合条件的数，但在寻找后续数列周期规律上遇到瓶颈。", review: "距离完全掌握只差一步。重点点拨“加上两个除数的最小公倍数即为下一个解”的周期规律通法。" },
+        { min: 0, expert: "这是一道典型的课外拔高题。如果没接触过“同余求最小公倍数”的方法，做不出非常正常。", review: "不必因此气馁。如果有意向进一步提升数学素养，可以找系统教材，从简单的同余规律开始学习。" }
+      ]
+    }
+  ];
+
+  // ====== 5大核心维度定义 ======
+  const DIMENSIONS = ['基础运算', '代数思维', '数论逻辑', '几何空间', '实践应用'];
+  const DIM_MAX = [24, 20, 26, 14, 16]; 
+  
+  function calculateDimensions(scores) {
+    return [
+      (scores[0]||0) + (scores[1]||0) + (scores[2]||0),          
+      (scores[3]||0) + (scores[7]||0) + (scores[12]||0),         
+      (scores[4]||0) + (scores[5]||0) + (scores[6]||0) + (scores[9]||0) + (scores[14]||0), 
+      (scores[8]||0) + (scores[10]||0),                          
+      (scores[11]||0) + (scores[13]||0)                          
+    ];
+  }
+
+  function getMedian(arr) {
+    if (!arr || arr.length === 0) return 0;
+    const sorted = [...arr].sort((a,b) => a-b);
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+  }
+
+  function getMode(arr) {
+    if (!arr || arr.length === 0) return 0;
+    const counts = {};
+    let maxCount = 0;
+    let mode = arr[0];
+    for (let v of arr) {
+      counts[v] = (counts[v] || 0) + 1;
+      if (counts[v] > maxCount) {
+        maxCount = counts[v];
+        mode = v;
+      }
+    }
+    return mode;
+  }
+
+  function calcStatsFromStudents(db) {
+    if (!db || db.length === 0) return { medians: null, modes: null };
+    const dimArrays = [[], [], [], [], []];
+    const totArray = [];
+    db.forEach(s => {
+        const dims = calculateDimensions(s.scores);
+        dims.forEach((v, i) => dimArrays[i].push(v));
+        totArray.push(dims.reduce((a,b)=>a+b,0));
+    });
+    const medians = dimArrays.map(arr => getMedian(arr));
+    medians.push(getMedian(totArray));
+
+    const modes = dimArrays.map(arr => getMode(arr));
+    modes.push(getMode(totArray));
+    return { medians, modes };
+  }
+
+  Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif';
+  Chart.register(ChartDataLabels);
+  let charts = {};
+
+  let AVG_RATES = null;
+  const COHORT_LABELS = ['0-30分', '31-40分', '41-50分', '51-60分', '61-70分', '71-100分'];
+  let COHORT_DATA = [0, 16.67, 41.67, 33.33, 8.33, 0];
+  let studentDatabase = [];
+
+  function getBucketIndex(total) {
+    if (total <= 30) return 0;
+    if (total <= 40) return 1;
+    if (total <= 50) return 2;
+    if (total <= 60) return 3;
+    if (total <= 70) return 4;
+    return 5;
+  }
+
+  function buildCohortDataFromStudents(db) {
+    const buckets = new Array(6).fill(0);
+    if (!db || db.length === 0) return buckets.map(() => 0);
+    db.forEach(stu => {
+      const total = stu.scores.reduce((a,b)=>a+(+b||0), 0);
+      buckets[getBucketIndex(total)] += 1;
+    });
+    return buckets.map(c => +(c / db.length * 100).toFixed(2));
+  }
+
+  function calcAvgDimRatesFromStudents(db) {
+    if (!db || db.length === 0) return null;
+    const sums = new Array(5).fill(0);
+    db.forEach(s => {
+      const dims = calculateDimensions(s.scores);
+      dims.forEach((v, i) => sums[i] += v);
+    });
+    return sums.map((sum, i) => +(sum / db.length / DIM_MAX[i] * 100).toFixed(1));
+  }
+
+  function getPercentileAndRank(db, total) {
+    if (!db || db.length === 0) return { rank: null, n: null, percentile: null };
+    const totals = db.map(s => s.scores.reduce((a,b)=>a+(+b||0),0)).sort((a,b)=>b-a);
+    const n = totals.length;
+    const rank = totals.findIndex(t => total >= t) + 1;
+    const percentile = +((1 - (rank - 1) / n) * 100).toFixed(1);
+    return { rank, n, percentile };
+  }
+
+  function pickStrengthsWeaknesses(dimScores) {
+    const rates = dimScores.map((s,i) => DIM_MAX[i] ? s / DIM_MAX[i] : 0);
+    const indexed = rates.map((r,i) => ({i,r})).sort((a,b)=>b.r-a.r);
+    return {
+      best: indexed.slice(0,2).map(x=>DIMENSIONS[x.i]),
+      worst: indexed.slice(-2).map(x=>DIMENSIONS[x.i])
+    };
+  }
+
+  function buildPersonalDiagnosisText(name, total, dimScores) {
+    const rates = dimScores.map((s,i) => DIM_MAX[i] ? s / DIM_MAX[i] : 0);
+    const minRate = Math.min(...rates);
+    const { best, worst } = pickStrengthsWeaknesses(dimScores);
+
+    if (total >= 100 && minRate >= 0.99) {
+      return `表现完美无瑕。五大能力维度基础扎实、逻辑极强。建议全面转入高阶拓展与超前拔高训练。`;
+    }
+    if (total >= 90 && minRate >= 0.85) {
+      return `整体非常优秀且能力均衡。建议以“限时训练+错题归因”继续提升稳定性，向极优等生发起冲击。`;
+    }
+    const weakMods = rates.map((r,i)=>({r, label:DIMENSIONS[i]})).filter(x=>x.r < 0.6).map(x=>x.label);
+    if (weakMods.length > 0) {
+      return `当前主要短板为 <span class="text-rose-500 font-semibold">${weakMods.join('、')}</span>。建议优先通过专项集训夯实薄弱维度，按“错因归类—知识溯源”推进。`;
+    }
+    return `基础总体扎实，在 <span class="text-orange-500 font-semibold">${worst.join('、')}</span> 模块仍有提升空间。建议对弱项进行重点模型梳理。`;
+  }
+
+  function renderCharts(dimScores, total) {
+    const DPR = 3;
+    // 现代化 HIG 调色板: Blue, Green, Orange, Purple, Red
+    const PIE_COLORS = ['#007AFF', '#34C759', '#FF9F0A', '#AF52DE', '#FF3B30']; 
+    
+    // 1) 饼图：5大维度
+    const pieCanvas = document.getElementById('chartPie');
+    if (pieCanvas) {
+      if (charts['pie']) charts['pie'].destroy();
+      charts['pie'] = new Chart(pieCanvas.getContext('2d'), {
+        type: 'pie',
+        data: {
+          labels: DIMENSIONS,
+          datasets: [{ data: DIM_MAX, backgroundColor: PIE_COLORS, borderWidth: 2, borderColor: '#ffffff', hoverOffset: 4 }]
+        },
+        options: {
+          devicePixelRatio: DPR, responsive: true, maintainAspectRatio: false,
+          layout: { padding: 8 },
+          plugins: {
+            legend: { position: 'bottom', labels: { boxWidth: 10, usePointStyle: true, font: { size: 10, weight: '500' }, color: '#1D1D1F', padding: 12 } },
+            datalabels: { color: '#ffffff', font: { weight: 'bold', size: 12 }, formatter: (v) => v + '%' }
+          }
+        }
+      });
+    }
+
+    // 2) 分布柱状图
+    const cohortCanvas = document.getElementById('chartCohortBar');
+    if (cohortCanvas) {
+      if (charts['cohort']) charts['cohort'].destroy();
+      const studentRangeIndex = getBucketIndex(total);
+      
+      const baseColors = COHORT_LABELS.map((_, i) => i === studentRangeIndex ? '#007AFF' : '#E5E5EA');
+
+      charts['cohort'] = new Chart(cohortCanvas.getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: COHORT_LABELS,
+          datasets: [{ data: COHORT_DATA, backgroundColor: baseColors, borderRadius: 6, borderSkipped: false, barThickness: 32, maxBarThickness: 40 }]
+        },
+        options: {
+          devicePixelRatio: DPR, responsive: true, maintainAspectRatio: false,
+          layout: { padding: { top: 20 } },
+          scales: {
+            y: { display: false, suggestedMax: Math.max(...COHORT_DATA, 0) + 10 },
+            x: { grid: { display: false }, border: {display: false}, ticks: { font: { size: 10, weight: '500' }, color: '#86868B' } }
+          },
+          plugins: {
+            legend: { display: false },
+            datalabels: { anchor: 'end', align: 'top', font: { size: 11, weight: 'bold' }, color: (ctx) => ctx.dataIndex === studentRangeIndex ? '#007AFF' : '#86868B', formatter: (v) => (v > 0 ? v.toFixed(1) : '0') + '%' }
+          }
+        }
+      });
+    }
+
+    // 3) 维度得分对比柱状图
+    const barCanvas = document.getElementById('chartBar');
+    if (barCanvas) {
+      if (charts['bar']) charts['bar'].destroy();
+      const fmt = (v) => `${(+v).toFixed(1)}%`;
+      const studentRates = dimScores.map((s, i) => +(s / DIM_MAX[i] * 100).toFixed(1));
+      const totalRate = +(total / 100 * 100).toFixed(1);
+
+      let avgTotalRate = null;
+      if (AVG_RATES && AVG_RATES.length === 5) {
+        const avgTotalScore = AVG_RATES.map((r, i) => (r / 100) * DIM_MAX[i]).reduce((a, b) => a + b, 0);
+        avgTotalRate = +(avgTotalScore / 100 * 100).toFixed(1);
+      }
+
+      const datasets = [];
+      if (AVG_RATES && AVG_RATES.length === 5) {
+        datasets.push({ label: '大盘平均', data: [...AVG_RATES.map(v => +(+v).toFixed(1)), avgTotalRate], backgroundColor: '#E5E5EA', borderRadius: 4, barThickness: 14, datalabels: { display: false } });
+      }
+      datasets.push({
+        label: '我的得分', data: [...studentRates, totalRate], backgroundColor: '#007AFF', borderRadius: 4, barThickness: 14,
+        datalabels: { anchor: 'end', align: 'top', offset: 2, color: '#1D1D1F', font: { size: 9, weight: 'bold' }, formatter: (v) => fmt(v) }
+      });
+
+      charts['bar'] = new Chart(barCanvas.getContext('2d'), {
+        type: 'bar',
+        data: { labels: [...DIMENSIONS, '总计'], datasets },
+        options: {
+          devicePixelRatio: DPR, responsive: true, maintainAspectRatio: false,
+          layout: { padding: { top: 20 } },
+          scales: {
+            y: { display: false, beginAtZero: true, max: 120 },
+            x: { grid: { display: false }, border: {display: false}, ticks: { font: { size: 10, weight: '600' }, color: '#1D1D1F' } }
+          },
+          plugins: { 
+            legend: { display: true, position: 'top', align: 'end', labels: { boxWidth: 8, usePointStyle: true, font: { size: 10 } } }, 
+            datalabels: { clamp: true, clip: false }, tooltip: { enabled: false } 
+          }
+        }
+      });
+    }
+
+    // 4) 5维度雷达图
+    const radarCanvas = document.getElementById('chartRadar');
+    if (radarCanvas) {
+      if (charts['radar']) charts['radar'].destroy();
+      const maxRates = [100, 100, 100, 100, 100];
+      const passRates = [60, 60, 60, 60, 60];
+      const myRates = dimScores.map((s, i) => (s / DIM_MAX[i]) * 100);
+
+      charts['radar'] = new Chart(radarCanvas.getContext('2d'), {
+        type: 'radar',
+        data: {
+          labels: DIMENSIONS,
+          datasets: [
+            { label: '完美档次', data: maxRates, borderColor: 'rgba(0,0,0,0.08)', borderDash: [4, 4], fill: false, pointRadius: 0, borderWidth: 1.5 },
+            { label: '及格基准', data: passRates, borderColor: 'rgba(255, 159, 10, 0.4)', borderDash: [2, 2], fill: false, pointRadius: 0, borderWidth: 1.5 },
+            { label: '我的表现', data: myRates, borderColor: '#007AFF', backgroundColor: 'rgba(0, 122, 255, 0.15)', borderWidth: 2.5, fill: true, pointBackgroundColor: '#007AFF', pointBorderColor: '#fff', pointRadius: 4, pointHoverRadius: 6 }
+          ]
+        },
+        options: {
+          devicePixelRatio: DPR, responsive: true, maintainAspectRatio: false,
+          layout: { padding: { top: 15, bottom: 15, left: 25, right: 25 } },
+          scales: {
+            r: {
+              min: 0, max: 110, ticks: { display: false, stepSize: 20 }, grid: { color: 'rgba(0,0,0,0.04)' }, angleLines: { color: 'rgba(0,0,0,0.04)' },
+              pointLabels: { font: { size: 11, weight: '600' }, color: '#1D1D1F', padding: 12 }
+            }
+          },
+          plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 8, usePointStyle:true, font: { size: 10 } } }, datalabels: { display: false }, tooltip: { enabled: false } }
+        }
+      });
+    }
+  }
+
+  // 动态生成第3-5页的逐题诊断内容 (完全现代化)
+  function renderDiagnosticPages(scores) {
+    const container = document.getElementById('diagnostic-pages-container');
+    container.innerHTML = '';
+    
+    const itemsPerPage = 5;
+    const numPages = Math.ceil(QUESTION_MAP.length / itemsPerPage);
+    
+    for(let i=0; i<numPages; i++) {
+      let pageHTML = `
+        <div class="a4-page relative flex flex-col">
+          <div class="flex justify-end pt-2 mb-6 border-b border-gray-100 pb-4">
+            <div class="text-[10px] text-gray-400 font-medium tracking-widest uppercase">Detailed Analytics ${i+1}/${numPages}</div>
+          </div>
+          <h2 class="text-lg font-bold text-[#1D1D1F] tracking-tight mb-6 flex items-center gap-2">
+            <div class="w-1.5 h-4 bg-[#007AFF] rounded-full"></div>
+            三、全卷逐题诊断与建议 (${i*itemsPerPage + 1}-${Math.min(i*itemsPerPage + itemsPerPage, QUESTION_MAP.length)})
+          </h2>
+          <div class="space-y-4 flex-1">
+      `;
+      
+      for(let j=0; j<itemsPerPage; j++) {
+        const qIndex = i*itemsPerPage + j;
+        if(qIndex >= QUESTION_MAP.length) break;
+        
+        const q = QUESTION_MAP[qIndex];
+        const score = scores[qIndex];
+        
+        let level = q.levels[q.levels.length - 1]; 
+        for(let k=0; k<q.levels.length; k++) {
+          if(score >= q.levels[k].min) { level = q.levels[k]; break; }
+        }
+        
+        const rate = score / q.max;
+        const isWeak = rate < 0.6;
+        
+        // 苹果风卡片
+        const boxClass = isWeak ? 'bg-white border border-rose-100 rounded-2xl shadow-[0_4px_20px_rgba(255,59,48,0.04)] relative overflow-hidden' : 'bg-white border border-gray-100 rounded-2xl shadow-sm relative overflow-hidden';
+        const accentLine = isWeak ? '<div class="absolute left-0 top-0 bottom-0 w-1 bg-[#FF3B30]"></div>' : '<div class="absolute left-0 top-0 bottom-0 w-1 bg-[#E5E5EA]"></div>';
+        
+        const badgeHtml = isWeak ? `<span class="text-[9px] bg-rose-50 text-[#FF3B30] border border-rose-100 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Focus Needed</span>` : `<span class="text-[9px] bg-gray-50 text-gray-500 border border-gray-100 px-2 py-0.5 rounded-full font-bold tracking-wider">${q.difficulty}</span>`;
+        
+        pageHTML += `
+          <div class="${boxClass} p-4 pl-5 transition-all hover:shadow-md">
+            ${accentLine}
+            <div class="flex justify-between items-center mb-2">
+              <h3 class="font-bold text-[14px] text-gray-900 tracking-tight">${q.label} <span class="text-[12px] text-gray-400 font-normal ml-1">${score}/${q.max}</span></h3>
+              ${badgeHtml}
+            </div>
+            <div class="text-[11px] text-gray-500 leading-snug mb-3 pr-4">
+              ${q.focus}
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="${isWeak ? 'bg-rose-50/50' : 'bg-gray-50'} p-2.5 rounded-xl">
+                <span class="block text-[10px] font-bold ${isWeak ? 'text-[#FF3B30]' : 'text-gray-900'} mb-1 uppercase tracking-wider">诊断 Diagnosis</span>
+                <span class="text-[10.5px] text-gray-700 leading-relaxed">${level.expert}</span>
+              </div>
+              <div class="bg-gray-50 p-2.5 rounded-xl">
+                <span class="block text-[10px] font-bold text-gray-900 mb-1 uppercase tracking-wider">建议 Action</span>
+                <span class="text-[10.5px] text-gray-700 leading-relaxed">${level.review}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      
+      pageHTML += `
+          </div>
+          <div class="mt-auto pt-4 flex items-center justify-between flex-shrink-0">
+            <div>
+              <p class="text-gray-900 font-bold text-xs mb-1">Empowering the logical mind.</p>
+              <p class="text-gray-400 text-[9px] tracking-widest uppercase">Snowball · Science & Logic</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="text-right">
+                <p class="text-[9px] text-gray-400 font-bold uppercase mb-0.5 tracking-wider">Verified by</p>
+                <p class="text-[11px] font-bold text-gray-900">雪球教研中心</p>
+              </div>
+              <div class="w-10 h-10 border-2 border-blue-100 bg-blue-50 rounded-full flex items-center justify-center text-[#007AFF] shadow-sm">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      container.innerHTML += pageHTML;
+    }
+  }
+
+  // 更新第6页: 班型规划建议 (加入强调卡片样式)
+  function updatePlanningPage(name, dimScores, total) {
+    let adviceHTML = '';
+    
+    // 基于 80 分的判定逻辑
+    if (total >= 80) {
+      adviceHTML = `
+        <div class="bg-gradient-to-r from-blue-50 to-indigo-50/80 border-2 border-blue-400 shadow-md p-5 rounded-xl flex-1 flex flex-col justify-center relative overflow-hidden">
+          <div class="absolute -right-4 -bottom-4 opacity-10 text-8xl">🎯</div>
+          <div class="flex items-center gap-2 mb-3">
+            <span class="bg-blue-600 text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm">核心推荐</span>
+            <p class="font-black text-blue-700 text-[16px] tracking-wide">🎯 推荐班型：【启能班】</p>
+          </div>
+          <p class="text-[12px] text-gray-800 leading-relaxed mb-2 relative z-10">
+            <strong class="text-blue-700">得分表现：</strong>本次总分 <strong class="text-blue-600 text-[14px]">${total}</strong> 分，数学基础牢固，具备非常优秀的逻辑推演潜质。
+          </p>
+          <p class="text-[12px] text-gray-800 leading-relaxed relative z-10">
+            <strong class="text-blue-700">进阶策略：</strong>建议进入<strong>启能班</strong>进行系统性的学习（可根据实际情况尝试跳级/超前）。通过高强度的训练，提前消化初中核心知识与小奥内容，稳步冲刺第1或第2梯队名校班型。
+          </p>
+        </div>`;
+    } else {
+      adviceHTML = `
+        <div class="bg-gradient-to-r from-orange-50 to-amber-50/80 border-2 border-orange-400 shadow-md p-5 rounded-xl flex-1 flex flex-col justify-center relative overflow-hidden">
+          <div class="absolute -right-4 -bottom-4 opacity-10 text-8xl">🎯</div>
+          <div class="flex items-center gap-2 mb-3">
+            <span class="bg-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm">核心推荐</span>
+            <p class="font-black text-orange-700 text-[16px] tracking-wide">🎯 推荐班型：【潜能班】</p>
+          </div>
+          <p class="text-[12px] text-gray-800 leading-relaxed mb-2 relative z-10">
+            <strong class="text-orange-700">得分表现：</strong>本次总分 <strong class="text-orange-600 text-[14px]">${total}</strong> 分，具备良好的基础，但在部分高阶思维模块上仍有进一步提升空间。
+          </p>
+          <p class="text-[12px] text-gray-800 leading-relaxed relative z-10">
+            <strong class="text-orange-700">进阶策略：</strong>建议进入<strong>潜能班</strong>。现阶段需优先夯实基础（建议按规划适当超前学习）。通过针对性突破，争取完成核心模块提升，向公办特色班等目标稳步迈进。
+          </p>
+        </div>`;
+    }
+    
+    const adviceEl = document.getElementById('classAdviceBox');
+    if (adviceEl) adviceEl.innerHTML = adviceHTML;
+  }
+
+  function handleFileUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheetName], { header: 1 });
+        processExcelData(jsonData);
+        event.target.value = '';
+      } catch (error) {
+        alert("文件读取失败，请确保是正确的 Excel 文件格式！");
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function processExcelData(rows) {
+    studentDatabase = [];
+    for (let i = 1; i < rows.length; i++) {
+      const cols = rows[i];
+      if (cols && cols.length >= 2 && cols[0]) {
+        let s = [];
+        for(let j=1; j<=15; j++) s.push(parseInt(cols[j]) || 0);
+        studentDatabase.push({ name: String(cols[0]).trim(), scores: s });
+      }
+    }
+    if (studentDatabase.length === 0) {
+      alert("未能解析出有效数据，请检查 Excel 格式（姓名 | 题1 | 题2 | ... | 题15）。");
+      return;
+    }
+
+    COHORT_DATA = buildCohortDataFromStudents(studentDatabase);
+    AVG_RATES = calcAvgDimRatesFromStudents(studentDatabase);
+
+    const stats = calcStatsFromStudents(studentDatabase);
+
+    for (let i = 0; i < 5; i++) {
+      const tdAvg = document.getElementById(`tdAvg${i+1}`);
+      if (tdAvg) tdAvg.innerText = AVG_RATES[i].toFixed(1) + '%';
+      
+      const tdMedian = document.getElementById(`tdMedian${i+1}`);
+      if (tdMedian && stats.medians) tdMedian.innerText = stats.medians[i];
+
+      const tdMode = document.getElementById(`tdMode${i+1}`);
+      if (tdMode && stats.modes) tdMode.innerText = stats.modes[i];
+    }
+    const avgTotal = AVG_RATES.map((r,i)=> r/100*DIM_MAX[i]).reduce((a,b)=>a+b,0);
+    const tdAvgTot = document.getElementById('tdAvgTot');
+    if (tdAvgTot) tdAvgTot.innerText = (avgTotal / 100 * 100).toFixed(1) + '%';
+
+    const tdMedianTot = document.getElementById('tdMedianTot');
+    if (tdMedianTot && stats.medians) tdMedianTot.innerText = stats.medians[5];
+
+    const tdModeTot = document.getElementById('tdModeTot');
+    if (tdModeTot && stats.modes) tdModeTot.innerText = stats.modes[5];
+
+    const selectEl = document.getElementById('studentSelect');
+    selectEl.innerHTML = '';
+    studentDatabase.forEach((stu, index) => {
+      const totalScore = stu.scores.reduce((a, b) => a + b, 0);
+      const opt = document.createElement('option');
+      opt.value = index; opt.textContent = `${stu.name} (${totalScore}分)`;
+      selectEl.appendChild(opt);
+    });
+
+    document.getElementById('batchNav').classList.remove('hidden');
+    loadStudentData(0);
+    alert(`✅ 成功读取 Excel！共导入 ${studentDatabase.length} 名学员数据。\n已更新大盘排位及5维度平均得分率。`);
+  }
+
+  function loadStudentData(index) {
+    const stu = studentDatabase[index];
+    if (!stu) return;
+    document.getElementById('stuName').value = stu.name;
+    for(let i=0; i<15; i++) {
+        document.getElementById(`scQ${i+1}`).value = stu.scores[i];
+    }
+    generateReport();
+  }
+
+  function generateReport() {
+    const name = document.getElementById('stuName').value || '未命名';
+    const scores = [];
+    for(let i=0; i<15; i++) {
+       scores.push(parseInt(document.getElementById(`scQ${i+1}`).value) || 0);
+    }
+    const total = scores.reduce((a, b) => a + b, 0);
+    const dimScores = calculateDimensions(scores);
+
+    document.querySelectorAll('.stu-name-disp').forEach(el => el.innerText = name);
+    if (document.getElementById('repScore')) document.getElementById('repScore').innerText = total;
+
+    // 更新第二页表格
+    for (let i = 0; i < 5; i++) {
+      const tdSc = document.getElementById(`tdDimSc${i + 1}`);
+      if (tdSc) tdSc.innerText = dimScores[i];
+    }
+    if (document.getElementById('tdScTot')) document.getElementById('tdScTot').innerText = total;
+
+    // 第一页诊断
+    if (document.getElementById('txtP1Score')) document.getElementById('txtP1Score').innerText = total;
+    const { rank, n, percentile } = getPercentileAndRank(studentDatabase, total);
+    const p1Rank = document.getElementById('txtP1Rank');
+    if (p1Rank) {
+      if (rank && n) { p1Rank.innerText = `第 ${rank}/${n} 名 (超越 ${percentile}%)`; } 
+      else { p1Rank.innerText = `${COHORT_LABELS[getBucketIndex(total)]}`; }
+    }
+    if (document.getElementById('txtP1Advice')) document.getElementById('txtP1Advice').innerHTML = buildPersonalDiagnosisText(name, total, dimScores);
+
+    // 雷达图优劣势文案 
+    const strengths = []; const weaknesses = [];
+    for (let i = 0; i < 5; i++) {
+      const rate = dimScores[i] / DIM_MAX[i];
+      if (rate >= 0.8) strengths.push(DIMENSIONS[i]);
+      else if (rate <= 0.6) weaknesses.push(DIMENSIONS[i]);
+    }
+
+    const rSTitle = document.getElementById('radarStrengthTitle'); const rSDesc = document.getElementById('radarStrengthDesc');
+    if (rSTitle && rSDesc) {
+      if (strengths.length > 0) { rSTitle.innerText = '优势领跑：' + strengths.join('、'); rSDesc.innerHTML = `在 ${strengths.join('、')} 维度表现优异，建议向更高阶题型挑战。`; } 
+      else { rSTitle.innerText = '优势领跑：积累期'; rSTitle.className = 'text-[13px] font-bold text-gray-500 tracking-wide'; rSDesc.innerText = '各维度处于积累期，建议先夯实计算基本功与基础概念。'; }
+    }
+    const rWTitle = document.getElementById('radarWeaknessTitle'); const rWDesc = document.getElementById('radarWeaknessDesc');
+    if (rWTitle && rWDesc) {
+      if (weaknesses.length > 0) { rWTitle.innerText = '进阶空间：' + weaknesses.join('、'); rWDesc.innerHTML = `需重点关注这些短板，建议通过归类易错题和专项训练进行突破。`; } 
+      else { rWTitle.innerText = '进阶空间：能力均衡无明显短板'; rWTitle.className = 'text-[13px] font-bold text-[#34C759] tracking-wide'; rWDesc.innerText = '整体能力分布较好。下一步建议全面冲刺高阶压轴题。'; }
+    }
+
+    renderDiagnosticPages(scores);
+    renderCharts(dimScores, total);
+    
+    // 更新最后一页规划推荐
+    updatePlanningPage(name, dimScores, total);
+  }
+
+  function wait(ms){ return new Promise(res => setTimeout(res, ms)); }
+  async function exportCurrentToPDF(filename) {
+    window.scrollTo(0, 0); 
+    const reportNode = document.getElementById('pdf-wrapper'); 
+    const opt = { margin: 0, filename, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0, scrollX: 0 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }, pagebreak: { mode: ['css', 'legacy'] } };
+    await html2pdf().set(opt).from(reportNode).save();
+  }
+
+  async function exportAllStudentsPDF() {
+    if (!studentDatabase || studentDatabase.length === 0) { alert('请先导入 Excel 后再使用批量导出。'); return; }
+    if (!confirm(`将导出 ${studentDatabase.length} 份PDF（每人1份）。请允许浏览器多文件下载，是否继续？`)) return;
+
+    const noPrintEls = document.querySelectorAll('.no-print');
+    noPrintEls.forEach(el => el.style.display = 'none');
+    document.body.classList.add('export-mode'); 
+
+    try {
+      for (let i = 0; i < studentDatabase.length; i++) {
+        loadStudentData(i);
+        await wait(600);
+        const name = (studentDatabase[i].name || `student_${i+1}`).replace(/[\\/:*?"<>|]/g, '_');
+        await exportCurrentToPDF(`${name}_全真测评报告.pdf`);
+        await wait(350);
+      }
+    } catch (e) {
+      console.error(e); alert('批量导出失败：' + (e?.message || e));
+    } finally {
+      noPrintEls.forEach(el => el.style.display = '');
+      document.body.classList.remove('export-mode'); 
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const defaultScores = [8,6,8,8,6,4,4,4,6,4,8,8,4,8,4]; 
+    
+    const inputsHtml = QUESTION_MAP.map((q, i) => `
+      <div class="flex items-center justify-between bg-white px-3 py-2 border border-gray-100 rounded-xl hover:shadow-sm transition-shadow">
+        <label class="text-[11px] font-medium text-gray-700 truncate pr-2 flex-1" title="${q.label}">${q.label} <span class="text-gray-400 font-normal ml-1">/${q.max}</span></label>
+        <input type="number" id="scQ${i+1}" value="${defaultScores[i]}" oninput="generateReport()" class="w-12 px-2 py-1 bg-gray-50 border border-gray-200 rounded-lg text-center font-bold text-blue-600 text-[12px] focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all">
+      </div>
+    `).join('');
+    document.getElementById('question-inputs').innerHTML = inputsHtml;
+
+    generateReport();
+  });
+</script>
+</body>
+</html>
