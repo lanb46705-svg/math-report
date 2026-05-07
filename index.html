@@ -714,6 +714,7 @@
   }
 
   Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif';
+  Chart.defaults.animation = false; // 全局禁用动画，彻底防止生成或打印PDF时截取到动画未完成的残影
   Chart.register(ChartDataLabels);
   let charts = {};
 
@@ -803,6 +804,7 @@
           datasets: [{ data: DIM_MAX, backgroundColor: PIE_COLORS, borderWidth: 2, borderColor: '#ffffff', hoverOffset: 4 }]
         },
         options: {
+          animation: false, // 关闭动画
           devicePixelRatio: DPR, responsive: true, maintainAspectRatio: false,
           layout: { padding: 8 },
           plugins: {
@@ -828,6 +830,7 @@
           datasets: [{ data: COHORT_DATA, backgroundColor: baseColors, borderRadius: 6, borderSkipped: false, barThickness: 32, maxBarThickness: 40 }]
         },
         options: {
+          animation: false, // 关闭动画
           devicePixelRatio: DPR, responsive: true, maintainAspectRatio: false,
           layout: { padding: { top: 20 } },
           scales: {
@@ -869,6 +872,7 @@
         type: 'bar',
         data: { labels: [...DIMENSIONS, '总计'], datasets },
         options: {
+          animation: false, // 关闭动画
           devicePixelRatio: DPR, responsive: true, maintainAspectRatio: false,
           layout: { padding: { top: 20 } },
           scales: {
@@ -902,6 +906,7 @@
           ]
         },
         options: {
+          animation: false, // 关闭动画
           devicePixelRatio: DPR, responsive: true, maintainAspectRatio: false,
           layout: { padding: { top: 15, bottom: 15, left: 25, right: 25 } },
           scales: {
@@ -1016,7 +1021,7 @@
           <div class="absolute -right-4 -bottom-4 opacity-10 text-8xl">🎯</div>
           <div class="flex items-center gap-2 mb-3">
             <span class="bg-blue-600 text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm">核心推荐</span>
-            <p class="font-black text-blue-700 text-[16px] tracking-wide">🎯 推荐班型：【启能班】</p>
+            <p class="font-black text-blue-700 text-[16px] tracking-wide">🎯 推荐班型：启能班</p>
           </div>
           <p class="text-[12px] text-gray-800 leading-relaxed mb-2 relative z-10">
             <strong class="text-blue-700">得分表现：</strong>本次总分 <strong class="text-blue-600 text-[14px]">${total}</strong> 分，数学基础牢固，具备非常优秀的逻辑推演潜质。
@@ -1031,7 +1036,7 @@
           <div class="absolute -right-4 -bottom-4 opacity-10 text-8xl">🎯</div>
           <div class="flex items-center gap-2 mb-3">
             <span class="bg-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm">核心推荐</span>
-            <p class="font-black text-orange-700 text-[16px] tracking-wide">🎯 推荐班型：【潜能班】</p>
+            <p class="font-black text-orange-700 text-[16px] tracking-wide">🎯 推荐班型：潜能班</p>
           </div>
           <p class="text-[12px] text-gray-800 leading-relaxed mb-2 relative z-10">
             <strong class="text-orange-700">得分表现：</strong>本次总分 <strong class="text-orange-600 text-[14px]">${total}</strong> 分，具备良好的基础，但在部分高阶思维模块上仍有进一步提升空间。
