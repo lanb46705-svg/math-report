@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>暑假续费复盘与二次转化作战方案</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --primary: #1f4e79;
+      --primary-soft: #e8f1fb;
+      --danger: #b91c1c;
+      --danger-soft: #fee2e2;
+      --success: #047857;
+      --success-soft: #d1fae5;
+      --warning: #b45309;
+      --warning-soft: #fff7ed;
+      --border: #e5e7eb;
+      --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+    }
+    .page { max-width: 1180px; margin: 0 auto; padding: 36px 24px 72px; }
+    .hero {
+      background: linear-gradient(135deg, #17324d 0%, #1f4e79 58%, #2563eb 100%);
+      color: #fff;
+      border-radius: 24px;
+      padding: 38px 42px;
+      box-shadow: var(--shadow);
+      margin-bottom: 24px;
+    }
+    .eyebrow { font-size: 13px; letter-spacing: 0.12em; opacity: .82; text-transform: uppercase; margin-bottom: 10px; }
+    h1 { font-size: 34px; line-height: 1.2; margin: 0 0 14px; font-weight: 800; }
+    .hero p { font-size: 18px; margin: 0; max-width: 960px; opacity: .95; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 22px 0 26px; }
+    .kpi { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 20px 22px; box-shadow: var(--shadow); }
+    .kpi .label { font-size: 14px; color: var(--muted); margin-bottom: 8px; }
+    .kpi .value { font-size: 32px; font-weight: 800; color: var(--primary); line-height: 1.1; }
+    .kpi .note { margin-top: 8px; font-size: 13px; color: var(--muted); }
+    section { background: var(--card); border: 1px solid var(--border); border-radius: 22px; padding: 28px; margin-bottom: 22px; box-shadow: var(--shadow); }
+    h2 { margin: 0 0 18px; font-size: 24px; color: var(--primary); border-left: 6px solid var(--primary); padding-left: 12px; line-height: 1.3; }
+    h3 { margin: 24px 0 12px; font-size: 19px; color: #111827; }
+    .lead { background: var(--primary-soft); border-left: 5px solid var(--primary); padding: 16px 18px; border-radius: 14px; margin: 0 0 18px; font-weight: 650; }
+    .warning { background: var(--warning-soft); border-left: 5px solid var(--warning); padding: 16px 18px; border-radius: 14px; margin: 16px 0; font-weight: 650; }
+    .danger { background: var(--danger-soft); border-left: 5px solid var(--danger); padding: 16px 18px; border-radius: 14px; margin: 16px 0; font-weight: 650; }
+    .success { background: var(--success-soft); border-left: 5px solid var(--success); padding: 16px 18px; border-radius: 14px; margin: 16px 0; font-weight: 650; }
+    table { width: 100%; border-collapse: collapse; margin: 14px 0 24px; font-size: 14px; border-radius: 14px; overflow: hidden; }
+    th, td { border: 1px solid var(--border); padding: 11px 12px; vertical-align: top; }
+    th { background: #f1f5f9; color: #111827; font-weight: 700; text-align: left; }
+    tr:nth-child(even) td { background: #fafafa; }
+    .tag { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; background: var(--primary-soft); color: var(--primary); margin-right: 4px; white-space: nowrap; }
+    .tag-danger { background: var(--danger-soft); color: var(--danger); }
+    .tag-success { background: var(--success-soft); color: var(--success); }
+    .tag-warning { background: var(--warning-soft); color: var(--warning); }
+    .names { background: #f8fafc; border: 1px solid var(--border); border-radius: 16px; padding: 14px 16px; color: #374151; font-weight: 650; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .mini-card { border: 1px solid var(--border); border-radius: 18px; padding: 18px; background: #fbfdff; }
+    .mini-card h4 { margin: 0 0 8px; color: var(--primary); font-size: 17px; }
+    .mini-card p { margin: 0; }
+    .footer-summary { background: #111827; color: #fff; border-radius: 22px; padding: 30px; margin-top: 24px; box-shadow: var(--shadow); }
+    .footer-summary h2 { color: #fff; border-left-color: #f59e0b; }
+    .footer-summary p { font-size: 17px; margin: 10px 0; }
+    @media print {
+      body { background: #fff; }
+      .page { max-width: none; padding: 0; }
+      section, .kpi, .hero, .footer-summary { box-shadow: none; break-inside: avoid; }
+    }
+    @media (max-width: 900px) {
+      .kpi-grid, .two-col { grid-template-columns: 1fr; }
+      .hero { padding: 28px; }
+      h1 { font-size: 28px; }
+      section { padding: 22px; }
+      table { display: block; overflow-x: auto; white-space: nowrap; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <div class="eyebrow">Renewal Review & Action Plan</div>
+      <h1>暑假续费复盘与二次转化作战方案</h1>
+    </header>
+
+    <div class="kpi-grid">
+      <div class="kpi"><div class="label">老生人数</div><div class="value">75</div><div class="note">全量 80 人，新生 5 人</div></div>
+      <div class="kpi"><div class="label">老生已续</div><div class="value">53</div><div class="note">老生实际续费率 70.7%</div></div>
+      <div class="kpi"><div class="label">真正可追</div><div class="value">4</div><div class="note">苏娅雯、苏娅霏、熊力臻、曹楚悦</div></div>
+      <div class="kpi"><div class="label">预估差值</div><div class="value">-23.3%</div><div class="note">预估 94.0% vs 实际 70.7%</div></div>
+    </div>
+
+    <section>
+      <h2>一、基础数据总览</h2>
+      <p class="lead">本次续费不是“全部未续都要继续追”。从管理动作上看，未续老生 22 人里，真正还有成交窗口、值得集中资源推进的只有 4 人：苏娅雯、苏娅霏、熊力臻、曹楚悦。</p>
+
+      <h3>1. 整体数据汇总</h3>
+      <table>
+        <thead><tr><th>项目</th><th>总人数</th><th>已续人数</th><th>续班率</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>班量</td><td>6 个班</td><td>-</td><td>-</td><td>覆盖二、三、四年级创新思维班</td></tr>
+          <tr><td>总基数</td><td>80</td><td>55</td><td>68.8%</td><td>含老生与新生</td></tr>
+          <tr><td>老生</td><td>75</td><td>53</td><td>70.7%</td><td>本次复盘核心口径</td></tr>
+          <tr><td>新生</td><td>5</td><td>2</td><td>40.0%</td><td>非本次续费主战场</td></tr>
+          <tr><td>可追学员人数+姓名</td><td colspan="4"><strong>4 人：</strong>苏娅雯、苏娅霏、熊力臻、曹楚悦</td></tr>
+        </tbody>
+      </table>
+
+      <h3>2. 单班数据标注</h3>
+      <table>
+        <thead><tr><th>班级名称</th><th>班级总人数</th><th>老生人数</th><th>老生已续人数</th><th>老生续班率</th><th>管理判断</th></tr></thead>
+        <tbody>
+          <tr><td>三年级创新思维班-周五</td><td>7</td><td>7</td><td>5</td><td>71.4%</td><td>未续主要是接送与课程匹配，不作为主追</td></tr>
+          <tr><td>三年级创新思维班-周六</td><td>13</td><td>13</td><td>9</td><td>69.2%</td><td><span class="tag tag-warning">主追班级</span> 苏娅雯、苏娅霏、熊力臻均在本班</td></tr>
+          <tr><td>二年级创新思维班-周六</td><td>6</td><td>6</td><td>3</td><td>50.0%</td><td>问题偏深层，不适合短期强追</td></tr>
+          <tr><td>四年级创新思维班-周六</td><td>23</td><td>20</td><td>14</td><td>70.0%</td><td>曹楚悦可追；另需关注已续防退</td></tr>
+          <tr><td>三年级创新思维班-周日</td><td>15</td><td>15</td><td>12</td><td>80.0%</td><td><span class="tag tag-success">表现最好</span> 可提炼续费动作</td></tr>
+          <tr><td>四年级创新思维班-周日</td><td>16</td><td>14</td><td>10</td><td>71.4%</td><td>未续多为客观时间与地点因素</td></tr>
+        </tbody>
+      </table>
+
+      <h3>3. 高频异议未续占比</h3>
+      <p>口径：老生未续 22 人；按备注多标签归因，比例合计可能超过 100%。</p>
+      <table>
+        <thead><tr><th>异议类型</th><th>人数</th><th>占未续学员比例</th><th>代表学员 / 说明</th></tr></thead>
+        <tbody>
+          <tr><td>价格问题</td><td>2</td><td>9.1%</td><td>苏娅雯、苏娅霏：需要看期末成绩，且手头紧</td></tr>
+          <tr><td>时间与已有安排冲突</td><td>15</td><td>68.2%</td><td>无人接送、回老家、搬家、出游、候鸟、去新加坡、时间不合适等</td></tr>
+          <tr><td>孩子意愿低</td><td>2</td><td>9.1%</td><td>黄俊滕、盛芷依：能力弱、学习动力不足、缺乏沉淀</td></tr>
+          <tr><td>效果不明显 / 观察后续效果</td><td>8</td><td>36.4%</td><td>看期末成绩、觉得课程难度低、没有进步、课程不匹配、秋季再看</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>二、客户预估差值深度分析</h2>
+      <h3>1. 预估 vs 实际差值复盘</h3>
+      <table>
+        <thead><tr><th>指标</th><th>数据</th><th>管理解读</th></tr></thead>
+        <tbody>
+          <tr><td>整体预估续班率</td><td>94.0%</td><td>预估口径偏乐观，但不是完全失真</td></tr>
+          <tr><td>实际续班率</td><td>70.7%</td><td>以老生 75 人、已续 53 人计算</td></tr>
+          <tr><td>差值</td><td>-23.3 个百分点</td><td>差值主要来自 A 类未续与暑假场景变量</td></tr>
+        </tbody>
+      </table>
+
+      <h3>2. 学员分层变化</h3>
+      <table>
+        <thead><tr><th>初始预估</th><th>老生人数</th><th>已续人数</th><th>未续人数</th><th>实际续费率</th><th>结论</th></tr></thead>
+        <tbody>
+          <tr><td>A</td><td>64</td><td>50</td><td>14</td><td>78.1%</td><td><span class="tag tag-danger">最大差值来源</span> A 类不是都值得追，要继续拆分</td></tr>
+          <tr><td>B+</td><td>4</td><td>2</td><td>2</td><td>50.0%</td><td>判断分化，需看是否有真实需求</td></tr>
+          <tr><td>B-</td><td>5</td><td>1</td><td>4</td><td>20.0%</td><td>整体判断准确，但郑思妍转化成功有复盘价值</td></tr>
+          <tr><td>D</td><td>2</td><td>0</td><td>2</td><td>0.0%</td><td>判断准确，不作为主追对象</td></tr>
+        </tbody>
+      </table>
+      <p class="danger">最关键的变化：A 类未续 14 人，但真正可追只有 4 人。其余多为搬家、回老家、无人接送、课程不匹配、明确外部安排等低转化因素，继续强追会消耗团队精力。</p>
+
+      <h3>3. 典型案例拆解</h3>
+      <table>
+        <thead><tr><th>案例类型</th><th>学员信息</th><th>预估分类</th><th>实际结果</th><th>背景关键信息</th><th>核心变化原因</th></tr></thead>
+        <tbody>
+          <tr><td>A→未续但可追</td><td>苏娅雯、苏娅霏 / 三年级周六</td><td>A</td><td>未续</td><td>需要看期末成绩，且手头紧</td><td>不是彻底拒绝，而是“效果确认 + 价格压力”双重观望；应以成绩后复盘和优惠截止推动</td></tr>
+          <tr><td>A→未续但可追</td><td>熊力臻 / 三年级周六</td><td>A</td><td>未续</td><td>未回复，且暑假安排未确认</td><td>核心问题不是异议强，而是未触达；需要换触达方式和截止提醒</td></tr>
+          <tr><td>A→未续但可追</td><td>曹楚悦 / 四年级周六</td><td>A</td><td>未续</td><td>要看期末成绩，且总是在最后才报名</td><td>典型拖延型客户，不能早早判定放弃，应在成绩节点后强跟进</td></tr>
+          <tr><td>B-/B+ 正向转化</td><td>郑思妍、史颂之、何语潼</td><td>B-/B+</td><td>已续</td><td>B 类中仍有成功转化</td><td>说明低预估客户不是都放弃，关键在于是否找到家长真正顾虑并形成解决动作</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>三、开窗前或窗口期关键动作复盘</h2>
+      <h3>1. 做对的可复制关键动作</h3>
+      <table>
+        <thead><tr><th>动作</th><th>复盘价值</th><th>后续复制方式</th></tr></thead>
+        <tbody>
+          <tr><td>提前做 A/B/D 分层</td><td>帮助团队形成基本盘判断，D 类判断准确</td><td>保留分层，但 A 类必须再拆成“真 A”和“假 A”</td></tr>
+          <tr><td>对部分学员有个性化备注</td><td>能看到家长真实顾虑，如成绩、价格、接送、课程匹配</td><td>所有未续必须统一补齐“真实未续原因”，不能只写未续</td></tr>
+          <tr><td>识别出可追窗口</td><td>苏娅雯、苏娅霏、熊力臻、曹楚悦仍有转化空间</td><td>主管集中介入 4 人，不再平均追 22 人</td></tr>
+        </tbody>
+      </table>
+
+      <h3>2. 待优化动作 + 后续改进计划</h3>
+      <table>
+        <thead><tr><th>存在问题</th><th>表现</th><th>后续改进计划</th></tr></thead>
+        <tbody>
+          <tr><td>A 类判断过宽</td><td>A 类 64 人，未续 14 人</td><td>A 类改为 A1/A2/A3：A1 已确认，A2 待成绩，A3 待时间</td></tr>
+          <tr><td>暑假安排确认偏晚</td><td>时间与安排冲突占未续 68.2%</td><td>开窗前两周完成“暑假时间/接送/出行确认表”</td></tr>
+          <tr><td>成绩节点动作不够强</td><td>苏娅雯、苏娅霏、曹楚悦都在等期末成绩</td><td>期末成绩出来 24 小时内，老师给学习复盘，主管给报名决策推动</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>四、防退动作</h2>
+      <h3>1. 近期考试情况与已续暑可能退费</h3>
+      <p>原表“学校期末成绩”字段填写不完整，因此考试维度只能作为风险提示，不能作为完整统计口径。当前以“已续但仍有负向反馈/诉求未满足”为防退重点。</p>
+      <table>
+        <thead><tr><th>班级名称</th><th>班级总人数</th><th>老生已续人数</th><th>已续暑可能退费人数</th><th>重点对象</th></tr></thead>
+        <tbody>
+          <tr><td>三年级创新思维班-周五</td><td>7</td><td>5</td><td>0</td><td>-</td></tr>
+          <tr><td>三年级创新思维班-周六</td><td>13</td><td>9</td><td>0</td><td>-</td></tr>
+          <tr><td>二年级创新思维班-周六</td><td>6</td><td>3</td><td>0</td><td>-</td></tr>
+          <tr><td>四年级创新思维班-周六</td><td>23</td><td>14</td><td>1</td><td>郑思妍：已续但备注“没有进步”</td></tr>
+          <tr><td>三年级创新思维班-周日</td><td>15</td><td>12</td><td>0</td><td>-</td></tr>
+          <tr><td>四年级创新思维班-周日</td><td>16</td><td>10</td><td>0</td><td>-</td></tr>
+        </tbody>
+      </table>
+
+      <h3>2. 防退动作</h3>
+      <table>
+        <thead><tr><th>动作</th><th>执行方式</th><th>目标</th></tr></thead>
+        <tbody>
+          <tr><td>学情反馈</td><td>为郑思妍补一份个性化期末学情报告，明确“没有进步”的原因和暑假提升方向</td><td>把家长的不满从情绪问题转为解决方案</td></tr>
+          <tr><td>考前关怀</td><td>已续学员在期末前后做一次复盘沟通，强调暑假课程如何承接短板</td><td>降低因成绩波动引发退费</td></tr>
+          <tr><td>暑班锁定</td><td>对高风险已续学员开课前完成一次主管确认，给出专属关注承诺</td><td>提升家长确定感与暑假到课稳定性</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>五、5-6月二次转化作战表</h2>
+      <table>
+        <thead><tr><th>学员</th><th>当前卡点</th><th>建议动作</th><th>负责人</th><th>目标结果</th></tr></thead>
+        <tbody>
+          <tr><td>苏娅雯</td><td>看期末成绩 + 手头紧</td><td>成绩出来后做学习复盘，给“暑假补短板 + 优惠截止”方案</td><td>老师先复盘，主管促单</td><td>转化报名或锁定秋季</td></tr>
+          <tr><td>苏娅霏</td><td>看期末成绩 + 手头紧</td><td>与苏娅雯绑定处理，给双生/同家庭决策方案</td><td>主管介入</td><td>争取一起续或至少锁定 1 人</td></tr>
+          <tr><td>熊力臻</td><td>未回复，暑假安排不清晰</td><td>换触达方式：电话 + 微信截止提醒 + 备选班次</td><td>老师触达，主管兜底</td><td>确认是否可续，不再悬空</td></tr>
+          <tr><td>曹楚悦</td><td>等期末成绩，习惯最后报名</td><td>设置明确报名节点，成绩后 24 小时内推动决策</td><td>主管跟进</td><td>窗口期内完成报名</td></tr>
+        </tbody>
+      </table>
+      <p class="success">不要再问“还报不报”，而是问“成绩出来后我们按哪个方案承接”。对 4 个可追对象，要做到有节点、有方案、有负责人、有结果。</p>
+    </section>
+
+    <div class="footer-summary">
+      <h2>最终管理结论</h2>
+      <p>本次暑假续费实际续费率为 70.7%，低于 94% 的预估，差值为 23.3 个百分点。问题的本质不是所有未续都要重新拉回，而是 A 类客户判断标准过宽，导致团队误把“关系不错”当成“确定会续”。</p>
+      <p>接下来不做大水漫灌式追单，只集中打 4 个真正可追学员：苏娅雯、苏娅霏、熊力臻、曹楚悦；同时守住已续中的防退对象郑思妍。</p>
+      <p><strong>下一轮机制升级：</strong>A 类必须同时满足“时间确认、效果认可、课程匹配、付款节点明确”。少一项，都不能叫真 A。</p>
+    </div>
+  </main>
+</body>
+</html>
