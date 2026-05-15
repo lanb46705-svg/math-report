@@ -3,33 +3,33 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>四升五入学数学分层测评评估报告生成器</title>
+  <title>四升五入学数学全真测评评估 - 麦肯锡架构版</title>
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- Chart.js + datalabels -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 
   <!-- SheetJS -->
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
-  <!-- html2pdf：批量导出每人一个PDF -->
+  <!-- html2pdf：批量导出 -->
   <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
 
   <style>
-    /* 现代苹果风设计重置 */
+    /* 麦肯锡高端咨询风 - 色彩系统重构 */
     :root {
-      --primary: #007AFF; /* Apple Blue */
-      --primary-light: #E5F1FF;
-      --success: #34C759;
-      --warning: #FF9F0A;
-      --danger: #FF3B30;
-      --danger-light: #FFECEB;
-      --text-main: #1D1D1F;
-      --text-secondary: #86868B;
-      --bg-body: #F5F5F7;
+      --mck-navy: #002B49;     /* 麦肯锡深蓝 */
+      --mck-teal: #0D9488;     /* 科技青碧 */
+      --mck-gold: #B45309;     /* 沉淀金 */
+      --mck-slate: #475569;    /* 莫兰迪灰 */
+      --mck-light: #F8FAFC;    /* 极简白灰 */
+      
+      --text-main: #0F172A;
+      --text-secondary: #64748B;
+      --bg-body: #E2E8F0;
     }
 
     * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -37,20 +37,17 @@
     body {
       background-color: var(--bg-body);
       color: var(--text-main);
-      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
-      margin: 0;
-      padding: 0;
+      font-family: "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+      margin: 0; padding: 0;
       -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
     }
 
     /* 滚动条美化 */
-    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #D2D2D7; border-radius: 10px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #86868B; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
 
-    /* A4 页面容器，屏幕上显示为柔和悬浮卡片 */
+    /* A4 页面容器，直角+微圆角，摒弃果风的大圆角，显得更严谨商业 */
     .a4-page {
       width: 210mm;
       height: 297mm;
@@ -59,142 +56,95 @@
       margin: 0 auto 30px auto;
       position: relative;
       overflow: hidden;
-      border-radius: 24px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0,0,0,0.02);
+      border-radius: 4px;
+      box-shadow: 0 10px 30px rgba(0, 43, 73, 0.08);
+      display: flex;
+      flex-direction: column;
     }
 
-    /* 导出模式去除屏幕样式 */
     body.export-mode .a4-page {
-      margin: 0 !important;
-      box-shadow: none !important;
-      border: none !important;
-      border-radius: 0 !important;
+      margin: 0 !important; box-shadow: none !important; border: none !important; border-radius: 0 !important;
     }
 
-    /* 现代 SaaS 风格表格 */
-    .modern-table { width: 100%; border-collapse: collapse; text-align: center; }
-    .modern-table th {
-      background-color: #F5F5F7;
-      color: var(--text-secondary);
-      font-weight: 600;
-      padding: 12px 8px;
-      font-size: 0.75rem;
-      border-bottom: 1px solid #E5E5EA;
-      border-top-left-radius: 8px;
-      border-top-right-radius: 8px;
-    }
-    .modern-table td {
-      padding: 12px 8px;
-      border-bottom: 1px solid #F2F2F7;
+    /* 麦肯锡表格风格：极简、去线化、重点突出 */
+    .mckinsey-table { width: 100%; border-collapse: collapse; text-align: center; font-size: 0.8rem; }
+    .mckinsey-table th {
+      background-color: var(--mck-light);
       color: var(--text-main);
-      font-size: 0.85rem;
-      transition: background-color 0.2s ease;
+      font-weight: 700;
+      padding: 10px 6px;
+      border-bottom: 2px solid var(--mck-navy);
+      text-transform: uppercase;
     }
-    .modern-table tr:hover td { background-color: #FAFAFC; }
-    .modern-table tr:last-child td { border-bottom: none; }
+    .mckinsey-table td {
+      padding: 10px 6px;
+      border-bottom: 1px solid #E2E8F0;
+      color: var(--text-secondary);
+    }
+    .mckinsey-table tr:hover td { background-color: #F1F5F9; }
+    .mckinsey-table .highlight-col { background-color: #F8FAFC; font-weight: bold; color: var(--mck-navy); }
 
-    /* 玻璃拟物特效 */
-    .glass-panel {
-      background: rgba(255, 255, 255, 0.85);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.3);
+    /* Dark Mode Page */
+    .dark-page {
+      background: #0F172A;
+      color: #E2E8F0;
     }
+    .dark-page .border-b { border-color: #334155; }
+    .dark-page h2, .dark-page h3, .dark-page h4 { color: #FFFFFF; }
 
     @media print {
       body { background: none !important; padding: 0 !important; margin: 0 !important; }
       .no-print { display: none !important; }
       .a4-page {
-        margin: 0 !important;
-        border: none !important;
-        box-shadow: none !important;
-        border-radius: 0 !important;
-        page-break-after: always !important;
-        page-break-inside: avoid !important;
-        width: 210mm !important;
-        height: 296.5mm !important;
-        padding: 15mm 18mm !important;
+        margin: 0 !important; border: none !important; box-shadow: none !important; border-radius: 0 !important;
+        page-break-after: always !important; page-break-inside: avoid !important;
+        width: 210mm !important; height: 296.5mm !important; padding: 15mm 18mm !important;
       }
       @page { size: A4 portrait; margin: 0; }
-      .pie-print-wrap { display:flex !important; justify-content:center !important; align-items:center !important; }
-      #chartPie { max-width: 100% !important; }
     }
   </style>
 </head>
 
 <body class="flex flex-col xl:flex-row p-4 lg:p-8 gap-8 justify-center items-start">
 
-  <!-- 左侧数据控制台 (现代化侧边栏) -->
-  <div class="w-full xl:w-80 glass-panel shadow-2xl p-6 h-fit no-print flex-shrink-0 sticky top-8 rounded-3xl z-50">
-    <div class="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
-      <div class="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center text-white shadow-md shadow-blue-500/20">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
-        </svg>
+  <!-- 左侧控制台 -->
+  <div class="w-full xl:w-80 bg-white shadow-xl p-6 h-fit no-print flex-shrink-0 sticky top-8 rounded-md border-t-4 border-[#002B49] z-50">
+    <div class="flex items-center gap-2 mb-6 pb-4 border-b border-gray-100">
+      <div class="w-8 h-8 bg-[#002B49] flex items-center justify-center text-white">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
       </div>
-      <h2 class="text-[17px] font-semibold text-gray-900 tracking-tight">成绩录入控制台</h2>
+      <h2 class="text-base font-bold text-[#002B49] uppercase tracking-wider">控制台 Control Panel</h2>
     </div>
 
-    <form id="scoreForm" class="space-y-5">
+    <form id="scoreForm" class="space-y-4">
       <div>
-        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">学员姓名</label>
-        <input type="text" id="stuName" value="廖和义" oninput="generateReport()"
-               class="w-full px-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 text-sm font-medium text-gray-900 transition-all">
+        <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">学员姓名</label>
+        <input type="text" id="stuName" value="廖和义" oninput="generateReport()" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 focus:outline-none focus:border-[#002B49] text-sm text-gray-900 transition-colors">
       </div>
-
-      <!-- 模块分数动态容器 -->
       <div>
-        <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">全卷 15 道题明细录入</label>
-        <div class="bg-gray-50/50 p-2 rounded-2xl border border-gray-100">
-          <div id="question-inputs" class="max-h-[40vh] overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+        <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">原始数据录入(15道题)</label>
+        <div class="bg-gray-50 p-2 border border-gray-200">
+          <div id="question-inputs" class="max-h-[35vh] overflow-y-auto space-y-1.5 pr-2 custom-scrollbar">
             <!-- JS 动态填入输入框 -->
           </div>
         </div>
       </div>
-
-      <div class="pt-2 space-y-3">
-        <button type="button" onclick="window.print()"
-                class="w-full bg-blue-600 text-white font-semibold py-3 rounded-xl shadow-lg shadow-blue-600/20 hover:bg-blue-700 hover:shadow-blue-600/30 hover:-translate-y-0.5 active:translate-y-0 transition-all flex justify-center items-center gap-2 text-sm">
-          打印 / 导出 PDF
-        </button>
-
-        <button type="button" onclick="exportAllStudentsPDF()"
-          class="w-full bg-gray-900 text-white font-semibold py-3 rounded-xl shadow-lg shadow-gray-900/10 hover:bg-black hover:shadow-gray-900/20 hover:-translate-y-0.5 active:translate-y-0 transition-all flex justify-center items-center gap-2 text-sm">
-          一键批量导出所有 PDF
-        </button>
+      <div class="pt-2 space-y-2">
+        <button type="button" onclick="window.print()" class="w-full bg-[#002B49] text-white font-bold py-2.5 hover:bg-[#001A2C] transition-colors text-sm uppercase tracking-wider">打印/导出 PDF</button>
+        <button type="button" onclick="exportAllStudentsPDF()" class="w-full border border-[#002B49] text-[#002B49] font-bold py-2.5 hover:bg-gray-50 transition-colors text-sm uppercase tracking-wider">批量导出报告</button>
       </div>
     </form>
 
-    <!-- 批量导入模块 -->
-    <div class="mt-8 pt-6 border-t border-gray-100">
-      <h3 class="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-        <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-        </svg>
-        Excel 批量处理
-      </h3>
-
-      <div class="bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
-        <p class="text-[10px] text-gray-500 leading-relaxed mb-3">
-          要求 16 列数据：<br>
-          <strong class="text-blue-600 font-medium">姓名 | 题1 | 题2 | ... | 题15</strong>
-        </p>
-
-        <label for="excelFile" class="flex flex-col items-center justify-center w-full h-20 border-2 border-blue-200 border-dashed rounded-xl cursor-pointer bg-white hover:bg-blue-50 transition-colors">
-          <div class="flex items-center justify-center gap-2">
-            <svg class="w-5 h-5 text-blue-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
-              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2" />
-            </svg>
-            <span class="text-xs font-semibold text-blue-600">点击选择 Excel 文件</span>
-          </div>
+    <div class="mt-6 pt-4 border-t border-gray-100">
+      <h3 class="text-xs font-bold text-gray-900 mb-2 uppercase tracking-widest">批量处理中心</h3>
+      <div class="bg-slate-50 p-3 border border-slate-200">
+        <label for="excelFile" class="flex flex-col items-center justify-center w-full h-16 border-2 border-slate-300 border-dashed cursor-pointer hover:bg-slate-100 transition-colors">
+          <span class="text-xs font-bold text-slate-600">导入 Excel 数据源(16列)</span>
           <input id="excelFile" type="file" class="hidden" accept=".xlsx, .xls, .csv" onchange="handleFileUpload(event)" />
         </label>
       </div>
-
-      <div id="batchNav" class="mt-4 hidden bg-gray-50 p-3 rounded-2xl border border-gray-100">
-        <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2">快捷切换学员预览</label>
-        <select id="studentSelect" onchange="loadStudentData(this.value)" class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/30">
-        </select>
+      <div id="batchNav" class="mt-3 hidden bg-gray-50 p-2 border border-gray-200">
+        <select id="studentSelect" onchange="loadStudentData(this.value)" class="w-full px-2 py-1.5 bg-white border border-gray-200 text-xs font-medium text-gray-900 focus:outline-none"></select>
       </div>
     </div>
   </div>
@@ -203,327 +153,276 @@
   <div class="flex-1 flex flex-col items-center">
     <div id="pdf-wrapper" style="width: 210mm;" class="flex flex-col items-center">
       
-      <!-- PAGE 1: 整体概览 -->
+      <!-- PAGE 1: 核心摘要与定导 (Executive Summary) -->
       <div class="a4-page flex flex-col">
-        <!-- 现代页眉 -->
-        <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-100 flex-shrink-0">
-          <div class="flex items-center gap-2">
-            <div class="w-6 h-6 bg-[#007AFF] rounded-md flex items-center justify-center">
-              <span class="text-white font-bold text-[10px] leading-none">雪球</span>
-            </div>
-            <span class="font-bold text-gray-900 text-sm tracking-tight">Snowball Intelligence</span>
+        <!-- 麦肯锡风页眉 -->
+        <div class="flex justify-between items-end mb-6 pb-2 border-b-2 border-[#002B49] flex-shrink-0">
+          <div>
+            <h1 class="text-2xl font-black text-[#002B49] tracking-tight">四升五入学数学全真测评评估</h1>
+            <p class="text-xs text-gray-500 font-bold uppercase tracking-widest mt-1">Executive Summary · 十五维核心能力综合测定</p>
           </div>
-          <div class="text-[10px] text-gray-400 font-medium tracking-widest uppercase">Mathematics Assessment Report</div>
+          <div class="text-right">
+            <!-- 已根据要求移除右侧的时间戳，仅保留保密标识 -->
+            <span class="text-xs font-bold text-[#002B49] block mb-1">CONFIDENTIAL</span>
+          </div>
         </div>
 
-        <!-- 极简标题区域 -->
-        <div class="mb-8 flex-shrink-0">
-          <h1 class="text-3xl font-bold text-[#1D1D1F] tracking-tight mb-2">四升五入学数学全真测评评估</h1>
-          <p class="text-sm text-[#86868B] font-medium">雪球素养教研中心 · 十五维核心能力综合测定</p>
-        </div>
-
-        <!-- 顶部核心数据卡片 (Apple Card 风格) -->
-        <div class="grid grid-cols-3 gap-4 mb-8 flex-shrink-0">
-          <div class="bg-gray-50 rounded-2xl p-5 flex flex-col items-start justify-center border border-gray-100">
-            <span class="text-[#86868B] text-xs font-semibold uppercase tracking-wider mb-1">学员姓名 Student</span>
-            <span class="text-2xl font-bold text-[#1D1D1F] stu-name-disp">廖和义</span>
+        <!-- 1. 核心指标栏 (Top Bar) -->
+        <div class="grid grid-cols-3 gap-4 mb-6 flex-shrink-0">
+          <div class="bg-gray-50 border-l-4 border-[#002B49] p-4 flex flex-col justify-center">
+            <span class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-1">受测学员 Name</span>
+            <span class="text-xl font-black text-[#0F172A] stu-name-disp">廖和义</span>
           </div>
-          <div class="bg-gray-50 rounded-2xl p-5 flex flex-col items-start justify-center border border-gray-100">
-            <span class="text-[#86868B] text-xs font-semibold uppercase tracking-wider mb-1">试卷总分 Total</span>
-            <span class="text-2xl font-bold text-[#1D1D1F]">100 <span class="text-sm font-medium text-gray-400">分</span></span>
-          </div>
-          <div class="bg-gradient-to-br from-[#007AFF] to-[#0051A8] rounded-2xl p-5 flex flex-col items-start justify-center text-white shadow-lg shadow-blue-500/20">
-            <span class="text-blue-100 text-xs font-semibold uppercase tracking-wider mb-1">测评得分 Score</span>
+          <div class="bg-gray-50 border-l-4 border-[#0D9488] p-4 flex flex-col justify-center">
+            <span class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-1">测评总分 Score</span>
             <div class="flex items-baseline gap-1">
-              <span id="repScore" class="text-4xl font-bold leading-none">100</span>
-              <span class="text-sm text-blue-200 font-medium">/100</span>
+              <span id="repScore" class="text-2xl font-black text-[#0D9488]">100</span>
+              <span class="text-xs text-gray-400 font-bold">/100</span>
             </div>
+          </div>
+          <div class="bg-gray-50 border-l-4 border-[#B45309] p-4 flex flex-col justify-center">
+            <span class="text-xs text-gray-500 font-bold uppercase tracking-widest mb-1">大盘定位 Percentile</span>
+            <span id="txtP1Rank" class="text-lg font-black text-[#B45309]">加载中...</span>
           </div>
         </div>
 
-        <h2 class="text-lg font-bold text-[#1D1D1F] tracking-tight mb-4 flex items-center gap-2 flex-shrink-0">
-          <div class="w-1.5 h-4 bg-[#007AFF] rounded-full"></div>
-          一、测评整体数据分析
-        </h2>
+        <!-- 2. 核心洞察 (Key Takeaways) - 原封不动还原评语 -->
+        <div class="mb-6 flex-shrink-0">
+          <h2 class="text-sm font-bold text-[#002B49] uppercase tracking-widest border-b border-gray-200 pb-1 mb-3">Key Takeaways · 核心洞察</h2>
+          <div class="bg-slate-50 border border-slate-200 p-4 text-sm text-slate-700 leading-relaxed font-medium" id="txtP1Advice">
+            加载中...
+          </div>
+        </div>
 
-        <div class="flex-1 flex flex-col gap-4 min-h-0">
-          <!-- 饼图区域 (玻璃卡片风格) -->
-          <div class="bg-white border border-gray-100 rounded-2xl p-5 flex flex-col shadow-sm flex-[1.1] min-h-0">
-            <div class="flex items-center justify-between mb-4 flex-shrink-0">
-              <h3 class="font-bold text-[#1D1D1F] text-sm">试卷能力维度分布</h3>
-              <span class="text-[10px] font-medium text-gray-400 bg-gray-50 px-2 py-1 rounded-full uppercase">Dimension</span>
+        <!-- 3. 雷达图 与 班型定导结论 (并排布局) -->
+        <div class="flex-1 flex gap-6 min-h-0">
+          <!-- 左侧：全息能力网 -->
+          <div class="w-[55%] flex flex-col min-h-0">
+            <!-- 【核心修复】强制左右两栏标题的高度一致，并使用items-end保证下划线绝对平齐 -->
+            <h2 class="text-sm font-bold text-[#002B49] uppercase tracking-widest border-b border-gray-200 pb-1 mb-3 flex-shrink-0 h-[48px] flex items-end">Capability Model · 能力模型</h2>
+            <div class="flex-1 border border-gray-100 bg-gray-50/50 p-2 relative flex flex-col items-center justify-center min-h-0">
+              <div class="w-full h-full max-h-[190px] relative">
+                <canvas id="chartRadar"></canvas>
+              </div>
+              <div class="mt-2 w-full grid grid-cols-1 gap-1.5 px-2 flex-shrink-0">
+                <div class="bg-white border border-gray-200 p-2 text-left shadow-sm">
+                  <div id="radarStrengthTitle" class="text-[#0D9488] font-bold text-[11px] mb-0.5">...</div>
+                  <div id="radarStrengthDesc" class="text-slate-500 text-[10px] leading-snug">...</div>
+                </div>
+                <div class="bg-white border border-gray-200 p-2 text-left shadow-sm">
+                  <div id="radarWeaknessTitle" class="text-[#B45309] font-bold text-[11px] mb-0.5">...</div>
+                  <div id="radarWeaknessDesc" class="text-slate-500 text-[10px] leading-snug">...</div>
+                </div>
+              </div>
             </div>
-            <div class="flex flex-row items-center gap-6 flex-1 min-h-0">
-              <div class="w-[40%] relative pie-print-wrap flex justify-center items-center h-full">
+          </div>
+
+          <!-- 右侧：最终定导结论 (原封不动还原评语) -->
+          <div class="w-[45%] flex flex-col min-h-0">
+            <!-- 【核心修复】强制高度48px并底端对齐 -->
+            <h2 class="text-sm font-bold text-[#002B49] uppercase tracking-widest border-b border-gray-200 pb-1 mb-3 flex-shrink-0 h-[48px] flex items-end">Actionable Recommendation · 算法定导</h2>
+            <!-- JS 注入推荐结论 -->
+            <div id="classAdviceBox" class="flex-1 flex flex-col min-h-0">
+              <!-- Content goes here -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE 2: 数据仪表盘 (Data Dashboard - 4象限) -->
+      <div class="a4-page flex flex-col">
+        <div class="flex justify-between items-end mb-4 pb-2 border-b-2 border-[#002B49] flex-shrink-0">
+          <h1 class="text-xl font-black text-[#002B49] tracking-tight">核心数据仪表盘</h1>
+          <p class="text-xs text-gray-500 font-bold uppercase tracking-widest">Data Dashboard</p>
+        </div>
+
+        <div class="flex-1 grid grid-cols-2 grid-rows-2 gap-4 min-h-0 pb-4">
+          
+          <!-- Q1: 大盘排位 (Cohort) -->
+          <div class="border border-slate-200 bg-white p-4 flex flex-col min-h-0">
+            <h3 class="text-xs font-bold text-[#002B49] uppercase tracking-widest mb-2 border-b border-slate-100 pb-1">大盘排位分布 Cohort Distribution</h3>
+            <div class="flex-1 relative w-full h-full min-h-0">
+              <canvas id="chartCohortBar"></canvas>
+            </div>
+          </div>
+
+          <!-- Q2: 试题维度占比 (融合了文字描述与图表) -->
+          <div class="border border-slate-200 bg-white p-4 flex flex-col min-h-0">
+            <h3 class="text-xs font-bold text-[#002B49] uppercase tracking-widest mb-2 border-b border-slate-100 pb-1">考点权重构成 Dimension Weight</h3>
+            <div class="flex-1 flex items-center justify-center min-h-0 gap-2">
+              <div class="w-1/2 h-full relative flex items-center justify-center">
                 <canvas id="chartPie"></canvas>
               </div>
-              <div class="w-[60%] flex flex-col justify-center">
-                <p class="text-gray-600 text-[11px] leading-relaxed mb-3 text-justify">
-                  <strong class="text-gray-900 font-semibold block mb-1">考点体系覆盖</strong>
-                  雪球素养四年级数学全真评估涵盖了基础运算、代数思维、数论逻辑、几何空间以及实践应用五大核心能力维度。通过15道精心设计的梯度题型，我们能多层次、全方位地解析学生的真实理科素养。
-                </p>
-                <p class="text-gray-600 text-[11px] leading-relaxed m-0 text-justify">
-                  <strong class="text-gray-900 font-semibold block mb-1">选拔性试题特点</strong>
-                  本次测评集中了小学向初中过渡阶段的重难点。要求具备扎实的基本功、严密的逻辑推演能力以及解题方法的灵活迁移能力。整体难度较高，生成的逐题数据将为今后针对性辅导提供精准方向。
-                </p>
+              <div class="w-1/2 flex flex-col justify-center text-[9px] text-slate-500 space-y-2 pr-1">
+                <p><strong class="text-slate-700">考点覆盖：</strong>十五维核心能力综合测定，涵盖代数思维、几何空间、数论等五大维度，全方位解析真实理科素养。</p>
+                <p><strong class="text-slate-700">试题特点：</strong>集中了小学向初中过渡阶段的重难点，要求具备扎实的基本功和严密的推演能力，拉分明显。</p>
               </div>
             </div>
           </div>
 
-          <!-- 柱状图区域 (玻璃卡片风格) -->
-          <div class="bg-white border border-gray-100 rounded-2xl p-5 flex flex-col shadow-sm flex-[0.9] min-h-0">
-            <div class="flex items-center justify-between mb-2 flex-shrink-0">
-              <h3 class="font-bold text-[#1D1D1F] text-sm">总体得分大盘排位</h3>
-              <span class="text-[10px] font-medium text-gray-400 bg-gray-50 px-2 py-1 rounded-full uppercase">Cohort</span>
-            </div>
-            <div class="flex flex-col flex-1 min-h-0">
-              <div class="flex-1 w-full relative min-h-0 mb-3">
-                <canvas id="chartCohortBar"></canvas>
-              </div>
-              <div class="bg-blue-50/50 border border-blue-100 rounded-xl p-3 flex items-start gap-3 flex-shrink-0">
-                <div class="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center flex-shrink-0 text-blue-500">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
-                </div>
-                <div class="text-gray-700 text-[11px] leading-snug flex-1">
-                  <span class="stu-name-disp font-bold text-gray-900">廖和义</span> 
-                  同学本次总分为 <strong id="txtP1Score" class="text-[#007AFF] text-sm">100</strong> 分，
-                  当前所在区间：<strong id="txtP1Rank" class="text-gray-900 font-bold">加载中...</strong>。<br>
-                  <span id="txtP1Advice" class="block mt-1 text-gray-500">加载中...</span>
-                </div>
-              </div>
+          <!-- Q3: 维度详细数据 (Table) -->
+          <div class="border border-slate-200 bg-white p-4 flex flex-col min-h-0 overflow-hidden">
+            <h3 class="text-xs font-bold text-[#002B49] uppercase tracking-widest mb-2 border-b border-slate-100 pb-1">各维度表现明细 Performance Table</h3>
+            <div class="flex-1 overflow-auto custom-scrollbar min-h-0">
+              <table class="mckinsey-table h-full w-full">
+                <thead>
+                  <tr>
+                    <th class="text-left">测评维度</th><th>基 础</th><th>代 数</th><th>数 论</th><th>几 何</th><th>应 用</th><th class="highlight-col">总计</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td class="text-left font-bold">满分</td><td>24</td><td>20</td><td>26</td><td>14</td><td>16</td><td class="highlight-col bg-slate-100">100</td></tr>
+                  <tr><td class="text-left font-bold text-[#002B49]">得分</td>
+                    <td id="tdDimSc1" class="font-bold text-[#002B49]">24</td><td id="tdDimSc2" class="font-bold text-[#002B49]">20</td><td id="tdDimSc3" class="font-bold text-[#002B49]">26</td><td id="tdDimSc4" class="font-bold text-[#002B49]">14</td><td id="tdDimSc5" class="font-bold text-[#002B49]">16</td><td id="tdScTot" class="highlight-col text-[#0D9488] text-lg">100</td>
+                  </tr>
+                  <tr><td class="text-left">中位分</td><td id="tdMedian1">—</td><td id="tdMedian2">—</td><td id="tdMedian3">—</td><td id="tdMedian4">—</td><td id="tdMedian5">—</td><td id="tdMedianTot" class="highlight-col">—</td></tr>
+                  <tr><td class="text-left">众位分</td><td id="tdMode1">—</td><td id="tdMode2">—</td><td id="tdMode3">—</td><td id="tdMode4">—</td><td id="tdMode5">—</td><td id="tdModeTot" class="highlight-col">—</td></tr>
+                  <tr><td class="text-left border-b-0">得分率</td><td id="tdAvg1" class="border-b-0">—</td><td id="tdAvg2" class="border-b-0">—</td><td id="tdAvg3" class="border-b-0">—</td><td id="tdAvg4" class="border-b-0">—</td><td id="tdAvg5" class="border-b-0">—</td><td id="tdAvgTot" class="highlight-col border-b-0">—</td></tr>
+                </tbody>
+              </table>
             </div>
           </div>
+
+          <!-- Q4: 维度对比柱状图 (Bar) -->
+          <div class="border border-slate-200 bg-white p-4 flex flex-col min-h-0">
+            <h3 class="text-xs font-bold text-[#002B49] uppercase tracking-widest mb-2 border-b border-slate-100 pb-1">维度得分对比 Score Comparison</h3>
+            <div class="flex-1 relative w-full h-full min-h-0">
+              <canvas id="chartBar"></canvas>
+            </div>
+          </div>
+
         </div>
       </div>
 
-      <!-- PAGE 2: 五大维度深度解析 -->
-      <div class="a4-page flex flex-col">
-        <div class="flex justify-end pt-2 mb-6 border-b border-gray-100 pb-4">
-          <div class="text-[10px] text-gray-400 font-medium tracking-widest uppercase">Data Analysis & Modeling</div>
-        </div>
-
-        <h2 class="text-lg font-bold text-[#1D1D1F] tracking-tight mb-6 flex items-center gap-2">
-          <div class="w-1.5 h-4 bg-[#007AFF] rounded-full"></div>
-          二、五大核心维度数据解析
-        </h2>
-
-        <!-- 各维度得分对比 (现代轻量化表格) -->
-        <div class="bg-white border border-gray-100 rounded-2xl mb-6 shadow-sm overflow-hidden">
-          <div class="bg-gray-50 px-5 py-4 border-b border-gray-100 flex justify-between items-center">
-            <h3 class="font-bold text-[#1D1D1F] text-sm">各维度得分对比</h3>
-          </div>
-          <div class="p-5">
-            <table class="modern-table mb-6">
-              <thead>
-              <tr>
-                <th class="text-left pl-3" style="width: 14%;">测评维度</th>
-                <th style="width: 14%;">基础运算</th><th style="width: 14%;">代数思维</th><th style="width: 14%;">数论逻辑</th><th style="width: 14%;">几何空间</th><th style="width: 14%;">实践应用</th><th style="width: 16%; color: #007AFF;">总计</th>
-              </tr>
-              </thead>
-              <tbody>
-              <tr>
-                <td class="text-left pl-3 font-medium text-gray-500 text-[11px]">满分值</td>
-                <td>24</td><td>20</td><td>26</td><td>14</td><td>16</td><td class="font-bold text-gray-900 bg-gray-50/50">100</td>
-              </tr>
-              <tr>
-                <td class="text-left pl-3 font-medium text-gray-500 text-[11px]">我的得分</td>
-                <td id="tdDimSc1" class="font-bold text-gray-900 text-base">24</td>
-                <td id="tdDimSc2" class="font-bold text-gray-900 text-base">20</td>
-                <td id="tdDimSc3" class="font-bold text-gray-900 text-base">26</td>
-                <td id="tdDimSc4" class="font-bold text-gray-900 text-base">14</td>
-                <td id="tdDimSc5" class="font-bold text-gray-900 text-base">16</td>
-                <td id="tdScTot" class="font-bold text-[#007AFF] text-lg bg-gray-50/50">100</td>
-              </tr>
-              <tr>
-                <td class="text-left pl-3 font-medium text-[#007AFF] text-[11px]">中位分</td>
-                <td id="tdMedian1" class="font-bold text-[#007AFF] text-xs">—</td>
-                <td id="tdMedian2" class="font-bold text-[#007AFF] text-xs">—</td>
-                <td id="tdMedian3" class="font-bold text-[#007AFF] text-xs">—</td>
-                <td id="tdMedian4" class="font-bold text-[#007AFF] text-xs">—</td>
-                <td id="tdMedian5" class="font-bold text-[#007AFF] text-xs">—</td>
-                <td id="tdMedianTot" class="font-bold text-[#007AFF] text-[13px] bg-blue-50/30">—</td>
-              </tr>
-              <tr>
-                <td class="text-left pl-3 font-medium text-purple-600 text-[11px]">众位分</td>
-                <td id="tdMode1" class="font-bold text-purple-600 text-xs">—</td>
-                <td id="tdMode2" class="font-bold text-purple-600 text-xs">—</td>
-                <td id="tdMode3" class="font-bold text-purple-600 text-xs">—</td>
-                <td id="tdMode4" class="font-bold text-purple-600 text-xs">—</td>
-                <td id="tdMode5" class="font-bold text-purple-600 text-xs">—</td>
-                <td id="tdModeTot" class="font-bold text-purple-600 text-[13px] bg-purple-50/30">—</td>
-              </tr>
-              <tr>
-                <td class="text-left pl-3 font-medium text-gray-400 text-[11px]">平均得分率</td>
-                <td id="tdAvg1" class="text-gray-500 text-[11px]">—</td>
-                <td id="tdAvg2" class="text-gray-500 text-[11px]">—</td>
-                <td id="tdAvg3" class="text-gray-500 text-[11px]">—</td>
-                <td id="tdAvg4" class="text-gray-500 text-[11px]">—</td>
-                <td id="tdAvg5" class="text-gray-500 text-[11px]">—</td>
-                <td id="tdAvgTot" class="text-gray-500 text-[11px] bg-gray-50/50">—</td>
-              </tr>
-              </tbody>
-            </table>
-            <div class="h-44 w-full"><canvas id="chartBar"></canvas></div>
-          </div>
-        </div>
-
-        <!-- 维度雷达分析 -->
-        <div class="bg-white border border-gray-100 rounded-2xl flex-shrink-0 shadow-sm overflow-hidden">
-          <div class="bg-gray-50 px-5 py-4 border-b border-gray-100 flex justify-between items-center">
-            <h3 class="font-bold text-[#1D1D1F] text-sm">能力模型雷达图</h3>
-          </div>
-          <div class="p-6 grid grid-cols-2 gap-8 items-center">
-            <div class="h-64 w-full relative flex justify-center items-center">
-              <canvas id="chartRadar"></canvas>
-            </div>
-            <div class="space-y-4">
-              <div class="bg-blue-50/50 p-4 rounded-2xl border border-blue-100 relative">
-                <div class="flex items-center gap-2 mb-1.5">
-                  <div class="w-2 h-2 rounded-full bg-[#007AFF]"></div>
-                  <div id="radarStrengthTitle" class="text-[13px] font-bold text-[#007AFF] tracking-wide">优势领跑：加载中...</div>
-                </div>
-                <p id="radarStrengthDesc" class="text-[11px] text-gray-600 leading-relaxed">加载中...</p>
-              </div>
-              <div class="bg-orange-50/50 p-4 rounded-2xl border border-orange-100 relative">
-                <div class="flex items-center gap-2 mb-1.5">
-                  <div class="w-2 h-2 rounded-full bg-[#FF9F0A]"></div>
-                  <div id="radarWeaknessTitle" class="text-[13px] font-bold text-[#FF9F0A] tracking-wide">进阶空间：加载中...</div>
-                </div>
-                <p id="radarWeaknessDesc" class="text-[11px] text-gray-600 leading-relaxed">加载中...</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 动态诊断页占位 (将会由JS生成 Page 3, Page 4, Page 5) -->
+      <!-- 动态诊断页占位 (Page 3-5) -->
       <div id="diagnostic-pages-container" class="w-full flex flex-col items-center"></div>
 
-      <!-- PAGE 6：梯队对标与跳级规划 -->
-      <div class="a4-page flex flex-col" id="pageZhongKao">
-        <div class="flex justify-between items-center pt-2 mb-6 border-b border-gray-100 pb-4">
-          <div class="flex items-center gap-2">
-            <div class="w-6 h-6 bg-[#007AFF] rounded-md flex items-center justify-center">
-              <span class="text-white font-bold text-[10px] leading-none">雪球</span>
-            </div>
-            <span class="font-bold text-gray-900 text-sm tracking-tight">Snowball Intelligence</span>
-          </div>
-          <div class="text-[10px] text-gray-400 font-medium tracking-widest uppercase">Transition & Planning</div>
-        </div>
-
-        <h2 class="text-lg font-bold text-[#1D1D1F] tracking-tight mb-4 flex items-center gap-2">
-          <div class="w-1.5 h-4 bg-[#007AFF] rounded-full"></div>
-          四、小学升学梯队对标 · 雪球思维学习规划建议
-        </h2>
-
-        <!-- 核心规划 Banner -->
-        <div class="bg-orange-50 border border-orange-100 rounded-xl p-3 mb-6 flex items-start gap-2 shadow-sm">
-           <span class="text-orange-500 text-lg leading-none mt-0.5">🚀</span>
-           <p class="text-[12px] text-gray-800 font-semibold leading-snug">
-              核心规划：为更好地达成升学目标，建议<span class="text-orange-500 font-bold">酌情尝试跳级或超前学习</span>，匹配相应班型以合理规划进度。
-           </p>
-        </div>
-
-        <!-- 跳级规划表格 (使用 table-layout: fixed 和 word-wrap 防止溢出) -->
-        <div class="border border-blue-200 rounded-lg overflow-hidden mb-6 shadow-sm">
-          <table class="w-full text-center" style="font-size: 11px; table-layout: fixed; word-wrap: break-word;">
-            <thead class="bg-[#007AFF] text-white">
-              <tr>
-                <th class="py-3 px-1 font-semibold w-[9%] border-r border-blue-400 align-middle tracking-wider">梯队</th>
-                <th class="py-3 px-1 font-semibold w-[14%] border-r border-blue-400 align-middle tracking-wider">目标班型</th>
-                <th class="py-3 px-2 font-semibold w-[28%] border-r border-blue-400 align-middle text-left tracking-wider">考试进度</th>
-                <th class="py-3 px-1 font-semibold w-[18%] border-r border-blue-400 align-middle tracking-wider">匹配课程</th>
-                <th class="py-3 px-2 font-semibold w-[31%] align-middle text-left tracking-wider">规划完成阶段</th>
-              </tr>
-            </thead>
-            <tbody class="text-gray-700 bg-white">
-              <!-- 第1梯队 -->
-              <tr class="border-b border-blue-100 hover:bg-blue-50/20 transition-colors">
-                <td class="py-4 px-1 font-bold text-[#FF3B30] border-r border-blue-100 align-middle text-center">第 1 梯队</td>
-                <td class="py-4 px-1 font-semibold border-r border-blue-100 leading-snug align-middle text-center">Q班 (25人)<br>H8 (40人)<br>上汇 (15人)</td>
-                <td class="py-4 px-2 text-left border-r border-blue-100 leading-relaxed align-middle">
-                  <span class="font-bold text-gray-900">Q班/H8：</span>5暑学完初中重要知识 + 小奥
-                  <div class="h-1.5"></div>
-                  <span class="font-bold text-gray-900">上汇：</span>小奥全部 + 六上 + 部分六下<br>
-                  <span class="text-[10px] text-gray-500">(基础计算、方程)</span>
-                </td>
-                <td class="py-4 px-1 font-bold text-[#007AFF] border-r border-blue-100 align-middle text-center leading-relaxed">
-                  小学 G3-G5<br>【启能班】<br><span class="text-[10px] text-gray-500 font-normal">建议尝试跳级</span>
-                </td>
-                <td class="py-4 px-2 text-left leading-relaxed align-middle">
-                  <span class="font-bold text-gray-900">Q/H8班：</span>G3起步<span class="text-[#FF9F0A] font-bold">建议跳级</span>，G4学完G5内容，<br>5暑完成小奥+初中重要知识
-                  <div class="h-1.5"></div>
-                  <span class="font-bold text-gray-900">上汇：</span>G3起步<span class="text-[#FF9F0A] font-bold">建议跳级</span>，G5暑完成<br>小奥全部+六上+部分六下
-                </td>
-              </tr>
-              <!-- 第2梯队 -->
-              <tr class="border-b border-blue-100 bg-blue-50/40 hover:bg-blue-50/60 transition-colors">
-                <td class="py-4 px-1 font-bold text-[#FF9F0A] border-r border-blue-100 align-middle text-center">第 2 梯队</td>
-                <td class="py-4 px-1 font-semibold border-r border-blue-100 align-middle text-center leading-snug">H7 (+30)<br>SBL、L6</td>
-                <td class="py-4 px-2 text-left border-r border-blue-100 leading-relaxed align-middle">小奥全部 + 六上 + 部分六下<br><span class="text-[10px] text-gray-500">(基础计算、方程)</span></td>
-                <td class="py-4 px-1 font-bold text-[#007AFF] border-r border-blue-100 align-middle text-center leading-relaxed">
-                  小学 G3-G5<br>【启能班】<br><span class="text-[10px] text-gray-500 font-normal">建议尝试跳级</span>
-                </td>
-                <td class="py-4 px-2 text-left leading-relaxed align-middle">G3起步<span class="text-[#FF9F0A] font-bold">建议跳级</span>，G5学年内完成<br>小奥全部+六上+部分六下</td>
-              </tr>
-              <!-- 第3梯队 -->
-              <tr class="border-b border-blue-100 hover:bg-blue-50/20 transition-colors">
-                <td class="py-4 px-1 font-bold text-[#007AFF] border-r border-blue-100 align-middle text-center">第 3 梯队</td>
-                <td class="py-4 px-1 font-semibold border-r border-blue-100 align-middle text-center">SG</td>
-                <td class="py-4 px-2 text-left border-r border-blue-100 leading-relaxed align-middle">小奥全部 + 六上</td>
-                <td class="py-4 px-1 font-bold text-[#007AFF] border-r border-blue-100 align-middle text-center leading-relaxed">
-                  小学 G3-G5<br>【潜能进阶 / 启能班】<br><span class="text-[10px] text-gray-500 font-normal">建议尝试跳级</span>
-                </td>
-                <td class="py-4 px-2 text-left leading-relaxed align-middle">G3起步<span class="text-[#FF9F0A] font-bold">建议跳级</span>，G5学年内完成<br>小奥全部+六上</td>
-              </tr>
-              <!-- 其 它 -->
-              <tr class="bg-gray-50/80 hover:bg-gray-100/80 transition-colors">
-                <td class="py-4 px-1 font-bold text-gray-500 border-r border-blue-100 align-middle text-center">其 它</td>
-                <td class="py-4 px-1 font-semibold border-r border-blue-100 align-middle text-center leading-snug">公办学校<br>特色班</td>
-                <td class="py-4 px-2 text-left border-r border-blue-100 leading-relaxed align-middle">校内 + 六上</td>
-                <td class="py-4 px-1 font-bold text-[#007AFF] border-r border-blue-100 align-middle text-center leading-relaxed">
-                  小学 G3-G5<br>【潜能班】<br><span class="text-[10px] text-gray-500 font-normal">建议超前学习</span>
-                </td>
-                <td class="py-4 px-2 text-left leading-relaxed align-middle">G3起步<span class="text-[#FF9F0A] font-bold">建议超前</span>，G5学年内完成<br>校内核心+六上</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- 个性化班型推荐建议 (重点强化) -->
-        <div class="flex-1 flex flex-col mb-6" id="classAdviceBox">
-             <!-- 内容将由 JS 动态注入更醒目的样式 -->
-             <p class="text-gray-400 font-medium text-xs">智能生成中...</p>
-        </div>
-
-        <!-- 底部引导说明 -->
-        <div class="bg-blue-50/50 rounded-xl p-4 text-center mt-auto flex-shrink-0 border border-blue-100/50">
-          <p class="text-[12px] font-bold text-[#007AFF] mb-2 tracking-wide">🌟 合理规划进度是达标关键 | 建议G3起步匹配对应班型，稳步达成目标</p>
-          <p class="text-[11px] text-gray-600 font-medium">💡 梯队越高，对进度的要求越高，建议按目标选班，稳步冲刺</p>
-        </div>
-
-        <!-- 底部徽标 (现代化印章) -->
-        <div class="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between flex-shrink-0">
+      <!-- PAGE 6：梯队对标与跳级规划 (纯正麦肯锡深色咨询报告风) -->
+      <div class="a4-page dark-page flex flex-col">
+        <div class="flex justify-between items-end mb-6 pb-2 border-b-2 border-slate-500 flex-shrink-0">
           <div>
-            <p class="text-gray-900 font-bold text-xs mb-1">Empowering the logical mind.</p>
-            <p class="text-gray-400 text-[9px] tracking-widest uppercase">Snowball · Science & Logic</p>
+            <h1 class="text-2xl font-black text-white tracking-tight">小学升学梯队对标与规划建议</h1>
+            <p class="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Appendix: Transition & Planning</p>
           </div>
-          <div class="flex items-center gap-2">
-            <div class="text-right">
-              <p class="text-[9px] text-gray-400 font-bold uppercase mb-0.5 tracking-wider">Verified by</p>
-              <p class="text-[11px] font-bold text-gray-900">雪球教研中心</p>
-            </div>
-            <div class="w-10 h-10 border-2 border-blue-100 bg-blue-50 rounded-full flex items-center justify-center text-[#007AFF] shadow-sm">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-            </div>
+          <div class="w-8 h-8 bg-slate-800 flex items-center justify-center text-white rounded">
+            <span class="font-bold text-xs">S</span>
           </div>
+        </div>
+
+        <div class="flex-1 flex flex-col">
+          <div class="bg-[#002B49] border-l-4 border-[#0D9488] p-3 mb-6 flex items-start gap-2 shadow-sm flex-shrink-0">
+             <p class="text-[11px] text-slate-200 font-medium leading-snug">
+                <strong class="text-white">核心战略：</strong>为更好地达成升学目标，建议<span class="text-[#0D9488] font-bold">酌情尝试跳级或超前学习</span>，匹配相应班型以合理规划进度。梯队越高，对进度的要求越高。
+             </p>
+          </div>
+
+          <div class="flex-1 bg-slate-900 border border-slate-700 rounded-sm overflow-hidden flex flex-col">
+            <table class="w-full text-left" style="font-size: 10px; table-layout: fixed;">
+              <thead class="bg-slate-800 text-slate-300">
+                <tr>
+                  <th class="py-3 px-3 font-bold w-[12%] border-b border-slate-700">升学梯队</th>
+                  <th class="py-3 px-3 font-bold w-[16%] border-b border-slate-700">目标班型</th>
+                  <th class="py-3 px-3 font-bold w-[25%] border-b border-slate-700">考试进度指标</th>
+                  <th class="py-3 px-3 font-bold w-[22%] border-b border-slate-700">建议匹配课程</th>
+                  <th class="py-3 px-3 font-bold w-[25%] border-b border-slate-700">推荐规划路径</th>
+                </tr>
+              </thead>
+              <tbody class="text-slate-400">
+                <!-- 梯队 1 -->
+                <tr class="hover:bg-slate-800/50 transition-colors">
+                  <td class="py-4 px-3 border-b border-slate-700 align-top">
+                    <span class="text-[#0D9488] font-bold text-[11px] block">第 1 梯队</span>
+                    <span class="text-[8px] bg-slate-800 border border-slate-600 px-1 py-0.5 rounded mt-1 inline-block">顶尖目标</span>
+                  </td>
+                  <td class="py-4 px-3 border-b border-slate-700 align-top text-slate-300">
+                    Q班 (25人)<br>H8 (40人)<br>上汇 (15人)
+                  </td>
+                  <td class="py-4 px-3 border-b border-slate-700 align-top leading-relaxed">
+                    <span class="text-white font-semibold">Q班/H8：</span>5暑学完初中重要知识+小奥<br>
+                    <span class="text-white font-semibold mt-1 block">上汇：</span>小奥全部+六上+部分六下
+                  </td>
+                  <td class="py-4 px-3 border-b border-slate-700 align-top leading-relaxed text-[#0D9488]">
+                    小学 G3-G5<br>【启能班】<br>
+                    <span class="text-slate-500">建议尝试跳级</span>
+                  </td>
+                  <td class="py-4 px-3 border-b border-slate-700 align-top leading-relaxed">
+                    <span class="text-white font-semibold">Q/H8班：</span>G3起步建议跳级，G4学完G5内容，5暑完成小奥+初中知识<br>
+                    <span class="text-white font-semibold mt-1 block">上汇：</span>G3起步跳级，G5暑完成小奥+六上+部分六下
+                  </td>
+                </tr>
+                <!-- 梯队 2 -->
+                <tr class="hover:bg-slate-800/50 transition-colors">
+                  <td class="py-4 px-3 border-b border-slate-700 align-top">
+                    <span class="text-[#B45309] font-bold text-[11px] block">第 2 梯队</span>
+                  </td>
+                  <td class="py-4 px-3 border-b border-slate-700 align-top text-slate-300">
+                    H7 (+30)<br>SBL、L6
+                  </td>
+                  <td class="py-4 px-3 border-b border-slate-700 align-top leading-relaxed">
+                    小奥全部 + 六上 + 部分六下 (基础计算、方程)
+                  </td>
+                  <td class="py-4 px-3 border-b border-slate-700 align-top leading-relaxed text-[#0D9488]">
+                    小学 G3-G5<br>【启能班】<br>
+                    <span class="text-slate-500">建议尝试跳级</span>
+                  </td>
+                  <td class="py-4 px-3 border-b border-slate-700 align-top leading-relaxed">
+                    G3起步建议跳级，G5学年内完成小奥全部+六上+部分六下
+                  </td>
+                </tr>
+                <!-- 梯队 3 -->
+                <tr class="hover:bg-slate-800/50 transition-colors">
+                  <td class="py-4 px-3 border-b border-slate-700 align-top">
+                    <span class="text-blue-400 font-bold text-[11px] block">第 3 梯队</span>
+                  </td>
+                  <td class="py-4 px-3 border-b border-slate-700 align-top text-slate-300">
+                    SG
+                  </td>
+                  <td class="py-4 px-3 border-b border-slate-700 align-top leading-relaxed">
+                    小奥全部 + 六上
+                  </td>
+                  <td class="py-4 px-3 border-b border-slate-700 align-top leading-relaxed text-blue-400">
+                    小学 G3-G5<br>【潜能进阶 / 启能班】<br>
+                    <span class="text-slate-500">建议尝试跳级</span>
+                  </td>
+                  <td class="py-4 px-3 border-b border-slate-700 align-top leading-relaxed">
+                    G3起步建议跳级，G5学年内完成小奥全部+六上
+                  </td>
+                </tr>
+                <!-- 其它 -->
+                <tr class="hover:bg-slate-800/50 transition-colors">
+                  <td class="py-4 px-3 border-b-0 align-top">
+                    <span class="text-slate-500 font-bold text-[11px] block">其 它 梯 队</span>
+                  </td>
+                  <td class="py-4 px-3 border-b-0 align-top text-slate-400">
+                    公办学校<br>特色班
+                  </td>
+                  <td class="py-4 px-3 border-b-0 align-top leading-relaxed">
+                    校内 + 六上
+                  </td>
+                  <td class="py-4 px-3 border-b-0 align-top leading-relaxed text-slate-400">
+                    小学 G3-G5<br>【潜能班】<br>
+                    <span class="text-slate-600">建议超前学习</span>
+                  </td>
+                  <td class="py-4 px-3 border-b-0 align-top leading-relaxed">
+                    G3起步建议超前，G5学年内完成校内核心+六上
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="mt-auto pt-4 border-t border-slate-700 flex justify-between items-center text-slate-500 text-[9px] tracking-widest uppercase font-bold">
+            <span>Snowball Intelligence Data Modeling</span>
+            <span>Empowering Logical Minds</span>
+          </div>
+
         </div>
       </div>
     </div>
   </div>
 
 <script>
-  // ====== 15道题的核心题库映射表 ======
+  // ====== 15道题核心题库映射表 ======
   const QUESTION_MAP = [
     {
       label: "一、直接写出得数", max: 8, difficulty: "★★★",
@@ -683,53 +582,36 @@
 
   function getMode(arr) {
     if (!arr || arr.length === 0) return 0;
-    const counts = {};
-    let maxCount = 0;
-    let mode = arr[0];
+    const counts = {}; let maxCount = 0; let mode = arr[0];
     for (let v of arr) {
       counts[v] = (counts[v] || 0) + 1;
-      if (counts[v] > maxCount) {
-        maxCount = counts[v];
-        mode = v;
-      }
+      if (counts[v] > maxCount) { maxCount = counts[v]; mode = v; }
     }
     return mode;
   }
 
   function calcStatsFromStudents(db) {
     if (!db || db.length === 0) return { medians: null, modes: null };
-    const dimArrays = [[], [], [], [], []];
-    const totArray = [];
+    const dimArrays = [[], [], [], [], []]; const totArray = [];
     db.forEach(s => {
         const dims = calculateDimensions(s.scores);
         dims.forEach((v, i) => dimArrays[i].push(v));
         totArray.push(dims.reduce((a,b)=>a+b,0));
     });
-    const medians = dimArrays.map(arr => getMedian(arr));
-    medians.push(getMedian(totArray));
-
-    const modes = dimArrays.map(arr => getMode(arr));
-    modes.push(getMode(totArray));
+    const medians = dimArrays.map(arr => getMedian(arr)); medians.push(getMedian(totArray));
+    const modes = dimArrays.map(arr => getMode(arr)); modes.push(getMode(totArray));
     return { medians, modes };
   }
 
-  Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif';
-  Chart.defaults.animation = false; // 全局禁用动画，彻底防止生成或打印PDF时截取到动画未完成的残影
-  Chart.register(ChartDataLabels);
   let charts = {};
-
   let AVG_RATES = null;
-  const COHORT_LABELS = ['0-30分', '31-40分', '41-50分', '51-60分', '61-70分', '71-100分'];
+  const COHORT_LABELS = ['0-30', '31-40', '41-50', '51-60', '61-70', '71-100'];
   let COHORT_DATA = [0, 16.67, 41.67, 33.33, 8.33, 0];
   let studentDatabase = [];
 
   function getBucketIndex(total) {
-    if (total <= 30) return 0;
-    if (total <= 40) return 1;
-    if (total <= 50) return 2;
-    if (total <= 60) return 3;
-    if (total <= 70) return 4;
-    return 5;
+    if (total <= 30) return 0; if (total <= 40) return 1; if (total <= 50) return 2;
+    if (total <= 60) return 3; if (total <= 70) return 4; return 5;
   }
 
   function buildCohortDataFromStudents(db) {
@@ -764,12 +646,10 @@
   function pickStrengthsWeaknesses(dimScores) {
     const rates = dimScores.map((s,i) => DIM_MAX[i] ? s / DIM_MAX[i] : 0);
     const indexed = rates.map((r,i) => ({i,r})).sort((a,b)=>b.r-a.r);
-    return {
-      best: indexed.slice(0,2).map(x=>DIMENSIONS[x.i]),
-      worst: indexed.slice(-2).map(x=>DIMENSIONS[x.i])
-    };
+    return { best: indexed.slice(0,2).map(x=>DIMENSIONS[x.i]), worst: indexed.slice(-2).map(x=>DIMENSIONS[x.i]) };
   }
 
+  // ==== 核心评语还原 ====
   function buildPersonalDiagnosisText(name, total, dimScores) {
     const rates = dimScores.map((s,i) => DIM_MAX[i] ? s / DIM_MAX[i] : 0);
     const minRate = Math.min(...rates);
@@ -783,73 +663,98 @@
     }
     const weakMods = rates.map((r,i)=>({r, label:DIMENSIONS[i]})).filter(x=>x.r < 0.6).map(x=>x.label);
     if (weakMods.length > 0) {
-      return `当前主要短板为 <span class="text-rose-500 font-semibold">${weakMods.join('、')}</span>。建议优先通过专项集训夯实薄弱维度，按“错因归类—知识溯源”推进。`;
+      return `当前主要短板为 <span class="text-[#B45309] font-bold">${weakMods.join('、')}</span>。建议优先通过专项集训夯实薄弱维度，按“错因归类—知识溯源”推进。`;
     }
-    return `基础总体扎实，在 <span class="text-orange-500 font-semibold">${worst.join('、')}</span> 模块仍有提升空间。建议对弱项进行重点模型梳理。`;
+    return `基础总体扎实，在 <span class="text-[#0D9488] font-bold">${worst.join('、')}</span> 模块仍有提升空间。建议对弱项进行重点模型梳理。`;
+  }
+
+  // ==== 班型定导结论 (麦肯锡风格深色卡片包裹) ====
+  function updatePlanningPage(name, dimScores, total) {
+    let adviceHTML = '';
+    
+    // 基于 80 分的判定逻辑
+    if (total >= 80) {
+      adviceHTML = `
+        <div class="bg-[#002B49] text-white p-4 h-full rounded-sm flex flex-col justify-center border border-[#002B49] shadow-md">
+          <div class="text-[#0D9488] text-[10px] font-bold tracking-widest uppercase mb-2">Top Tier Target</div>
+          <p class="font-black text-base mb-3 flex items-center gap-2">🎯 推荐班型：启能班</p>
+          <p class="text-[11px] text-slate-300 leading-relaxed mb-2">
+            <strong class="text-[#0D9488]">得分表现：</strong>本次总分 <strong class="text-white text-[13px]">${total}</strong> 分，数学基础牢固，具备非常优秀的逻辑推演潜质。
+          </p>
+          <p class="text-[11px] text-slate-300 leading-relaxed">
+            <strong class="text-[#0D9488]">进阶策略：</strong>建议进入<strong>启能班</strong>进行系统性的学习（可根据实际情况尝试跳级/超前）。通过高强度的训练，提前消化初中核心知识与小奥内容，稳步冲刺第1或第2梯队名校班型。
+          </p>
+        </div>`;
+    } else {
+      adviceHTML = `
+        <div class="bg-white text-[#002B49] p-4 h-full rounded-sm flex flex-col justify-center border border-slate-200 shadow-sm">
+          <div class="text-[#B45309] text-[10px] font-bold tracking-widest uppercase mb-2">Base Target</div>
+          <p class="font-black text-base mb-3 flex items-center gap-2">📖 推荐班型：潜能班</p>
+          <p class="text-[11px] text-slate-500 leading-relaxed mb-2">
+            <strong class="text-[#002B49]">得分表现：</strong>本次总分 <strong class="text-[#B45309] text-[13px]">${total}</strong> 分，具备良好的基础，但在部分高阶思维模块上仍有进一步提升空间。
+          </p>
+          <p class="text-[11px] text-slate-500 leading-relaxed">
+            <strong class="text-[#002B49]">进阶策略：</strong>建议进入<strong>潜能班</strong>。现阶段需优先夯实基础（建议按规划适当超前学习）。通过针对性突破，争取完成核心模块提升，向公办特色班等目标稳步迈进。
+          </p>
+        </div>`;
+    }
+    const adviceEl = document.getElementById('classAdviceBox');
+    if (adviceEl) adviceEl.innerHTML = adviceHTML;
   }
 
   function renderCharts(dimScores, total) {
     const DPR = 3;
-    // 现代化 HIG 调色板: Blue, Green, Orange, Purple, Red
-    const PIE_COLORS = ['#007AFF', '#34C759', '#FF9F0A', '#AF52DE', '#FF3B30']; 
+    const MCK_COLORS = ['#002B49', '#0D9488', '#475569', '#B45309', '#94A3B8']; 
     
-    // 1) 饼图：5大维度
+    // 1) 维度占比 Donut Chart
     const pieCanvas = document.getElementById('chartPie');
     if (pieCanvas) {
       if (charts['pie']) charts['pie'].destroy();
       charts['pie'] = new Chart(pieCanvas.getContext('2d'), {
-        type: 'pie',
-        data: {
-          labels: DIMENSIONS,
-          datasets: [{ data: DIM_MAX, backgroundColor: PIE_COLORS, borderWidth: 2, borderColor: '#ffffff', hoverOffset: 4 }]
-        },
+        type: 'doughnut',
+        data: { labels: DIMENSIONS, datasets: [{ data: DIM_MAX, backgroundColor: MCK_COLORS, borderWidth: 1, borderColor: '#fff' }] },
         options: {
-          animation: false, // 关闭动画
-          devicePixelRatio: DPR, responsive: true, maintainAspectRatio: false,
+          animation: false, cutout: '60%', devicePixelRatio: DPR, responsive: true, maintainAspectRatio: false,
           layout: { padding: 8 },
           plugins: {
-            legend: { position: 'bottom', labels: { boxWidth: 10, usePointStyle: true, font: { size: 10, weight: '500' }, color: '#1D1D1F', padding: 12 } },
-            datalabels: { color: '#ffffff', font: { weight: 'bold', size: 12 }, formatter: (v) => v + '%' }
+            legend: { display: false },
+            datalabels: { 
+              display: true, color: '#ffffff', font: { weight: 'bold', size: 10 }, formatter: (v) => v + '分' 
+            }
           }
         }
       });
     }
 
-    // 2) 分布柱状图
+    // 2) 大盘分布 (Cohort Bar)
     const cohortCanvas = document.getElementById('chartCohortBar');
     if (cohortCanvas) {
       if (charts['cohort']) charts['cohort'].destroy();
       const studentRangeIndex = getBucketIndex(total);
-      
-      const baseColors = COHORT_LABELS.map((_, i) => i === studentRangeIndex ? '#007AFF' : '#E5E5EA');
+      const baseColors = COHORT_LABELS.map((_, i) => i === studentRangeIndex ? '#002B49' : '#E2E8F0');
 
       charts['cohort'] = new Chart(cohortCanvas.getContext('2d'), {
         type: 'bar',
-        data: {
-          labels: COHORT_LABELS,
-          datasets: [{ data: COHORT_DATA, backgroundColor: baseColors, borderRadius: 6, borderSkipped: false, barThickness: 32, maxBarThickness: 40 }]
-        },
+        data: { labels: COHORT_LABELS, datasets: [{ data: COHORT_DATA, backgroundColor: baseColors, barThickness: 24 }] },
         options: {
-          animation: false, // 关闭动画
-          devicePixelRatio: DPR, responsive: true, maintainAspectRatio: false,
+          animation: false, devicePixelRatio: DPR, responsive: true, maintainAspectRatio: false,
           layout: { padding: { top: 20 } },
           scales: {
             y: { display: false, suggestedMax: Math.max(...COHORT_DATA, 0) + 10 },
-            x: { grid: { display: false }, border: {display: false}, ticks: { font: { size: 10, weight: '500' }, color: '#86868B' } }
+            x: { grid: { display: false }, border: {display: false}, ticks: { font: { size: 9 }, color: '#64748B' } }
           },
           plugins: {
             legend: { display: false },
-            datalabels: { anchor: 'end', align: 'top', font: { size: 11, weight: 'bold' }, color: (ctx) => ctx.dataIndex === studentRangeIndex ? '#007AFF' : '#86868B', formatter: (v) => (v > 0 ? v.toFixed(1) : '0') + '%' }
+            datalabels: { anchor: 'end', align: 'top', font: { size: 10, weight: 'bold' }, color: (ctx) => ctx.dataIndex === studentRangeIndex ? '#002B49' : '#64748B', formatter: (v) => v > 0 ? v.toFixed(0) + '%' : '' }
           }
         }
       });
     }
 
-    // 3) 维度得分对比柱状图
+    // 3) 维度对比 Bar (简约设计)
     const barCanvas = document.getElementById('chartBar');
     if (barCanvas) {
       if (charts['bar']) charts['bar'].destroy();
-      const fmt = (v) => `${(+v).toFixed(1)}%`;
       const studentRates = dimScores.map((s, i) => +(s / DIM_MAX[i] * 100).toFixed(1));
       const totalRate = +(total / 100 * 100).toFixed(1);
 
@@ -861,38 +766,34 @@
 
       const datasets = [];
       if (AVG_RATES && AVG_RATES.length === 5) {
-        datasets.push({ label: '大盘平均', data: [...AVG_RATES.map(v => +(+v).toFixed(1)), avgTotalRate], backgroundColor: '#E5E5EA', borderRadius: 4, barThickness: 14, datalabels: { display: false } });
+        datasets.push({ label: 'Benchmark', data: [...AVG_RATES.map(v => +(+v).toFixed(1)), avgTotalRate], backgroundColor: '#E2E8F0', barThickness: 10, datalabels: { display: false } });
       }
       datasets.push({
-        label: '我的得分', data: [...studentRates, totalRate], backgroundColor: '#007AFF', borderRadius: 4, barThickness: 14,
-        datalabels: { anchor: 'end', align: 'top', offset: 2, color: '#1D1D1F', font: { size: 9, weight: 'bold' }, formatter: (v) => fmt(v) }
+        label: 'My Score', data: [...studentRates, totalRate], backgroundColor: '#0D9488', barThickness: 10,
+        datalabels: { anchor: 'end', align: 'top', offset: 2, color: '#0F172A', font: { size: 9, weight: 'bold' }, formatter: (v) => (+v).toFixed(0) + '%' }
       });
 
       charts['bar'] = new Chart(barCanvas.getContext('2d'), {
         type: 'bar',
-        data: { labels: [...DIMENSIONS, '总计'], datasets },
+        data: { labels: [...DIMENSIONS, 'Total'], datasets },
         options: {
-          animation: false, // 关闭动画
-          devicePixelRatio: DPR, responsive: true, maintainAspectRatio: false,
+          animation: false, devicePixelRatio: DPR, responsive: true, maintainAspectRatio: false,
           layout: { padding: { top: 20 } },
           scales: {
-            y: { display: false, beginAtZero: true, max: 120 },
-            x: { grid: { display: false }, border: {display: false}, ticks: { font: { size: 10, weight: '600' }, color: '#1D1D1F' } }
+            y: { display: false, max: 120 },
+            x: { grid: { display: false }, border: {display: false}, ticks: { font: { size: 9, weight: 'bold' }, color: '#0F172A' } }
           },
           plugins: { 
-            legend: { display: true, position: 'top', align: 'end', labels: { boxWidth: 8, usePointStyle: true, font: { size: 10 } } }, 
-            datalabels: { clamp: true, clip: false }, tooltip: { enabled: false } 
+            legend: { display: true, position: 'top', align: 'end', labels: { boxWidth: 8, font: { size: 9 } } }
           }
         }
       });
     }
 
-    // 4) 5维度雷达图
+    // 4) 雷达图
     const radarCanvas = document.getElementById('chartRadar');
     if (radarCanvas) {
       if (charts['radar']) charts['radar'].destroy();
-      const maxRates = [100, 100, 100, 100, 100];
-      const passRates = [60, 60, 60, 60, 60];
       const myRates = dimScores.map((s, i) => (s / DIM_MAX[i]) * 100);
 
       charts['radar'] = new Chart(radarCanvas.getContext('2d'), {
@@ -900,46 +801,42 @@
         data: {
           labels: DIMENSIONS,
           datasets: [
-            { label: '完美档次', data: maxRates, borderColor: 'rgba(0,0,0,0.08)', borderDash: [4, 4], fill: false, pointRadius: 0, borderWidth: 1.5 },
-            { label: '及格基准', data: passRates, borderColor: 'rgba(255, 159, 10, 0.4)', borderDash: [2, 2], fill: false, pointRadius: 0, borderWidth: 1.5 },
-            { label: '我的表现', data: myRates, borderColor: '#007AFF', backgroundColor: 'rgba(0, 122, 255, 0.15)', borderWidth: 2.5, fill: true, pointBackgroundColor: '#007AFF', pointBorderColor: '#fff', pointRadius: 4, pointHoverRadius: 6 }
+            { label: 'Standard', data: [60,60,60,60,60], borderColor: '#CBD5E1', borderDash: [2, 2], fill: false, pointRadius: 0, borderWidth: 1 },
+            { label: 'My Profile', data: myRates, borderColor: '#002B49', backgroundColor: 'rgba(0, 43, 73, 0.1)', borderWidth: 2, fill: true, pointBackgroundColor: '#002B49', pointRadius: 3 }
           ]
         },
         options: {
-          animation: false, // 关闭动画
-          devicePixelRatio: DPR, responsive: true, maintainAspectRatio: false,
-          layout: { padding: { top: 15, bottom: 15, left: 25, right: 25 } },
+          animation: false, devicePixelRatio: DPR, responsive: true, maintainAspectRatio: false,
+          layout: { padding: { top: 10, bottom: 10, left: 10, right: 10 } },
           scales: {
             r: {
-              min: 0, max: 110, ticks: { display: false, stepSize: 20 }, grid: { color: 'rgba(0,0,0,0.04)' }, angleLines: { color: 'rgba(0,0,0,0.04)' },
-              pointLabels: { font: { size: 11, weight: '600' }, color: '#1D1D1F', padding: 12 }
+              min: 0, max: 100, ticks: { display: false, stepSize: 20 },
+              grid: { color: '#E2E8F0' }, angleLines: { color: '#E2E8F0' },
+              pointLabels: { font: { size: 10, weight: 'bold' }, color: '#0F172A', padding: 8 }
             }
           },
-          plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 8, usePointStyle:true, font: { size: 10 } } }, datalabels: { display: false }, tooltip: { enabled: false } }
+          plugins: { legend: { display: false }, datalabels: { display: false } }
         }
       });
     }
   }
 
-  // 动态生成第3-5页的逐题诊断内容 (完全现代化)
   function renderDiagnosticPages(scores) {
     const container = document.getElementById('diagnostic-pages-container');
     container.innerHTML = '';
     
+    // 麦肯锡版保持一页排布5题
     const itemsPerPage = 5;
     const numPages = Math.ceil(QUESTION_MAP.length / itemsPerPage);
     
     for(let i=0; i<numPages; i++) {
       let pageHTML = `
         <div class="a4-page relative flex flex-col">
-          <div class="flex justify-end pt-2 mb-6 border-b border-gray-100 pb-4">
-            <div class="text-[10px] text-gray-400 font-medium tracking-widest uppercase">Detailed Analytics ${i+1}/${numPages}</div>
+          <div class="flex justify-between items-end mb-6 pb-2 border-b-2 border-[#002B49] flex-shrink-0">
+            <h1 class="text-xl font-black text-[#002B49] tracking-tight">逐题诊断与战略纠偏 (${i*itemsPerPage + 1}-${Math.min(i*itemsPerPage + itemsPerPage, QUESTION_MAP.length)})</h1>
+            <p class="text-xs text-gray-500 font-bold uppercase tracking-widest mt-1">Deep Dive ${i+1}/${numPages}</p>
           </div>
-          <h2 class="text-lg font-bold text-[#1D1D1F] tracking-tight mb-6 flex items-center gap-2">
-            <div class="w-1.5 h-4 bg-[#007AFF] rounded-full"></div>
-            三、全卷逐题诊断与建议 (${i*itemsPerPage + 1}-${Math.min(i*itemsPerPage + itemsPerPage, QUESTION_MAP.length)})
-          </h2>
-          <div class="space-y-4 flex-1">
+          <div class="space-y-3 flex-1">
       `;
       
       for(let j=0; j<itemsPerPage; j++) {
@@ -957,30 +854,24 @@
         const rate = score / q.max;
         const isWeak = rate < 0.6;
         
-        // 苹果风卡片
-        const boxClass = isWeak ? 'bg-white border border-rose-100 rounded-2xl shadow-[0_4px_20px_rgba(255,59,48,0.04)] relative overflow-hidden' : 'bg-white border border-gray-100 rounded-2xl shadow-sm relative overflow-hidden';
-        const accentLine = isWeak ? '<div class="absolute left-0 top-0 bottom-0 w-1 bg-[#FF3B30]"></div>' : '<div class="absolute left-0 top-0 bottom-0 w-1 bg-[#E5E5EA]"></div>';
-        
-        const badgeHtml = isWeak ? `<span class="text-[9px] bg-rose-50 text-[#FF3B30] border border-rose-100 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Focus Needed</span>` : `<span class="text-[9px] bg-gray-50 text-gray-500 border border-gray-100 px-2 py-0.5 rounded-full font-bold tracking-wider">${q.difficulty}</span>`;
+        const boxClass = isWeak ? 'bg-white border border-[#B45309] shadow-sm' : 'bg-white border border-slate-200';
+        const flagText = isWeak ? '<span class="text-[9px] bg-[#B45309] text-white px-2 py-0.5 rounded-sm font-bold tracking-wider">RISK FLAG</span>' : '';
         
         pageHTML += `
-          <div class="${boxClass} p-4 pl-5 transition-all hover:shadow-md">
-            ${accentLine}
-            <div class="flex justify-between items-center mb-2">
-              <h3 class="font-bold text-[14px] text-gray-900 tracking-tight">${q.label} <span class="text-[12px] text-gray-400 font-normal ml-1">${score}/${q.max}</span></h3>
-              ${badgeHtml}
+          <div class="${boxClass} p-3 mb-2">
+            <div class="flex justify-between items-center mb-1.5 border-b border-slate-100 pb-1.5">
+              <h3 class="font-bold text-[13px] text-[#002B49] tracking-tight">${q.label} <span class="text-slate-400 font-normal ml-2">Score: ${score}/${q.max}</span></h3>
+              <div class="flex gap-2">${flagText}<span class="text-[9px] text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-sm">${q.difficulty}</span></div>
             </div>
-            <div class="text-[11px] text-gray-500 leading-snug mb-3 pr-4">
-              ${q.focus}
-            </div>
-            <div class="grid grid-cols-2 gap-3">
-              <div class="${isWeak ? 'bg-rose-50/50' : 'bg-gray-50'} p-2.5 rounded-xl">
-                <span class="block text-[10px] font-bold ${isWeak ? 'text-[#FF3B30]' : 'text-gray-900'} mb-1 uppercase tracking-wider">诊断 Diagnosis</span>
-                <span class="text-[10.5px] text-gray-700 leading-relaxed">${level.expert}</span>
+            <div class="text-[10px] text-slate-500 leading-snug mb-2"><strong class="text-slate-700">考察意图：</strong>${q.focus}</div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <span class="block text-[9px] font-bold text-[#002B49] mb-1 border-l-2 border-[#002B49] pl-1 uppercase tracking-wider">现状诊断 Diagnosis</span>
+                <span class="text-[10px] text-slate-700 leading-relaxed">${level.expert}</span>
               </div>
-              <div class="bg-gray-50 p-2.5 rounded-xl">
-                <span class="block text-[10px] font-bold text-gray-900 mb-1 uppercase tracking-wider">建议 Action</span>
-                <span class="text-[10.5px] text-gray-700 leading-relaxed">${level.review}</span>
+              <div>
+                <span class="block text-[9px] font-bold text-[#0D9488] mb-1 border-l-2 border-[#0D9488] pl-1 uppercase tracking-wider">修正方案 Action Plan</span>
+                <span class="text-[10px] text-slate-700 leading-relaxed">${level.review}</span>
               </div>
             </div>
           </div>
@@ -989,66 +880,14 @@
       
       pageHTML += `
           </div>
-          <div class="mt-auto pt-4 flex items-center justify-between flex-shrink-0">
-            <div>
-              <p class="text-gray-900 font-bold text-xs mb-1">Empowering the logical mind.</p>
-              <p class="text-gray-400 text-[9px] tracking-widest uppercase">Snowball · Science & Logic</p>
-            </div>
-            <div class="flex items-center gap-2">
-              <div class="text-right">
-                <p class="text-[9px] text-gray-400 font-bold uppercase mb-0.5 tracking-wider">Verified by</p>
-                <p class="text-[11px] font-bold text-gray-900">雪球教研中心</p>
-              </div>
-              <div class="w-10 h-10 border-2 border-blue-100 bg-blue-50 rounded-full flex items-center justify-center text-[#007AFF] shadow-sm">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-              </div>
-            </div>
+          <div class="mt-auto pt-4 flex items-center justify-between flex-shrink-0 text-[10px] text-slate-400 font-bold uppercase tracking-widest border-t border-slate-100">
+            <span>Snowball Intelligence</span>
+            <span>Confidential & Proprietary</span>
           </div>
         </div>
       `;
       container.innerHTML += pageHTML;
     }
-  }
-
-  // 更新第6页: 班型规划建议 (加入强调卡片样式)
-  function updatePlanningPage(name, dimScores, total) {
-    let adviceHTML = '';
-    
-    // 基于 80 分的判定逻辑
-    if (total >= 80) {
-      adviceHTML = `
-        <div class="bg-gradient-to-r from-blue-50 to-indigo-50/80 border-2 border-blue-400 shadow-md p-5 rounded-xl flex-1 flex flex-col justify-center relative overflow-hidden">
-          <div class="absolute -right-4 -bottom-4 opacity-10 text-8xl">🎯</div>
-          <div class="flex items-center gap-2 mb-3">
-            <span class="bg-blue-600 text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm">核心推荐</span>
-            <p class="font-black text-blue-700 text-[16px] tracking-wide">🎯 推荐班型：启能班</p>
-          </div>
-          <p class="text-[12px] text-gray-800 leading-relaxed mb-2 relative z-10">
-            <strong class="text-blue-700">得分表现：</strong>本次总分 <strong class="text-blue-600 text-[14px]">${total}</strong> 分，数学基础牢固，具备非常优秀的逻辑推演潜质。
-          </p>
-          <p class="text-[12px] text-gray-800 leading-relaxed relative z-10">
-            <strong class="text-blue-700">进阶策略：</strong>建议进入<strong>启能班</strong>进行系统性的学习（可根据实际情况尝试跳级/超前）。通过高强度的训练，提前消化初中核心知识与小奥内容，稳步冲刺第1或第2梯队名校班型。
-          </p>
-        </div>`;
-    } else {
-      adviceHTML = `
-        <div class="bg-gradient-to-r from-orange-50 to-amber-50/80 border-2 border-orange-400 shadow-md p-5 rounded-xl flex-1 flex flex-col justify-center relative overflow-hidden">
-          <div class="absolute -right-4 -bottom-4 opacity-10 text-8xl">🎯</div>
-          <div class="flex items-center gap-2 mb-3">
-            <span class="bg-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm">核心推荐</span>
-            <p class="font-black text-orange-700 text-[16px] tracking-wide">🎯 推荐班型：潜能班</p>
-          </div>
-          <p class="text-[12px] text-gray-800 leading-relaxed mb-2 relative z-10">
-            <strong class="text-orange-700">得分表现：</strong>本次总分 <strong class="text-orange-600 text-[14px]">${total}</strong> 分，具备良好的基础，但在部分高阶思维模块上仍有进一步提升空间。
-          </p>
-          <p class="text-[12px] text-gray-800 leading-relaxed relative z-10">
-            <strong class="text-orange-700">进阶策略：</strong>建议进入<strong>潜能班</strong>。现阶段需优先夯实基础（建议按规划适当超前学习）。通过针对性突破，争取完成核心模块提升，向公办特色班等目标稳步迈进。
-          </p>
-        </div>`;
-    }
-    
-    const adviceEl = document.getElementById('classAdviceBox');
-    if (adviceEl) adviceEl.innerHTML = adviceHTML;
   }
 
   function handleFileUpload(event) {
@@ -1063,9 +902,7 @@
         const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheetName], { header: 1 });
         processExcelData(jsonData);
         event.target.value = '';
-      } catch (error) {
-        alert("文件读取失败，请确保是正确的 Excel 文件格式！");
-      }
+      } catch (error) { alert("文件读取失败！"); }
     };
     reader.readAsArrayBuffer(file);
   }
@@ -1080,35 +917,21 @@
         studentDatabase.push({ name: String(cols[0]).trim(), scores: s });
       }
     }
-    if (studentDatabase.length === 0) {
-      alert("未能解析出有效数据，请检查 Excel 格式（姓名 | 题1 | 题2 | ... | 题15）。");
-      return;
-    }
+    if (studentDatabase.length === 0) { alert("解析失败。"); return; }
 
     COHORT_DATA = buildCohortDataFromStudents(studentDatabase);
     AVG_RATES = calcAvgDimRatesFromStudents(studentDatabase);
-
     const stats = calcStatsFromStudents(studentDatabase);
 
     for (let i = 0; i < 5; i++) {
-      const tdAvg = document.getElementById(`tdAvg${i+1}`);
-      if (tdAvg) tdAvg.innerText = AVG_RATES[i].toFixed(1) + '%';
-      
-      const tdMedian = document.getElementById(`tdMedian${i+1}`);
-      if (tdMedian && stats.medians) tdMedian.innerText = stats.medians[i];
-
-      const tdMode = document.getElementById(`tdMode${i+1}`);
-      if (tdMode && stats.modes) tdMode.innerText = stats.modes[i];
+      const tdAvg = document.getElementById(`tdAvg${i+1}`); if (tdAvg) tdAvg.innerText = AVG_RATES[i].toFixed(1) + '%';
+      const tdMedian = document.getElementById(`tdMedian${i+1}`); if (tdMedian && stats.medians) tdMedian.innerText = stats.medians[i];
+      const tdMode = document.getElementById(`tdMode${i+1}`); if (tdMode && stats.modes) tdMode.innerText = stats.modes[i];
     }
     const avgTotal = AVG_RATES.map((r,i)=> r/100*DIM_MAX[i]).reduce((a,b)=>a+b,0);
-    const tdAvgTot = document.getElementById('tdAvgTot');
-    if (tdAvgTot) tdAvgTot.innerText = (avgTotal / 100 * 100).toFixed(1) + '%';
-
-    const tdMedianTot = document.getElementById('tdMedianTot');
-    if (tdMedianTot && stats.medians) tdMedianTot.innerText = stats.medians[5];
-
-    const tdModeTot = document.getElementById('tdModeTot');
-    if (tdModeTot && stats.modes) tdModeTot.innerText = stats.modes[5];
+    const tdAvgTot = document.getElementById('tdAvgTot'); if (tdAvgTot) tdAvgTot.innerText = (avgTotal / 100 * 100).toFixed(1) + '%';
+    const tdMedianTot = document.getElementById('tdMedianTot'); if (tdMedianTot && stats.medians) tdMedianTot.innerText = stats.medians[5];
+    const tdModeTot = document.getElementById('tdModeTot'); if (tdModeTot && stats.modes) tdModeTot.innerText = stats.modes[5];
 
     const selectEl = document.getElementById('studentSelect');
     selectEl.innerHTML = '';
@@ -1121,49 +944,45 @@
 
     document.getElementById('batchNav').classList.remove('hidden');
     loadStudentData(0);
-    alert(`✅ 成功读取 Excel！共导入 ${studentDatabase.length} 名学员数据。\n已更新大盘排位及5维度平均得分率。`);
+    alert(`成功导入 ${studentDatabase.length} 名数据！大盘基准已更新。`);
   }
 
   function loadStudentData(index) {
     const stu = studentDatabase[index];
     if (!stu) return;
     document.getElementById('stuName').value = stu.name;
-    for(let i=0; i<15; i++) {
-        document.getElementById(`scQ${i+1}`).value = stu.scores[i];
-    }
+    for(let i=0; i<15; i++) { document.getElementById(`scQ${i+1}`).value = stu.scores[i]; }
     generateReport();
   }
 
   function generateReport() {
     const name = document.getElementById('stuName').value || '未命名';
     const scores = [];
-    for(let i=0; i<15; i++) {
-       scores.push(parseInt(document.getElementById(`scQ${i+1}`).value) || 0);
-    }
+    for(let i=0; i<15; i++) { scores.push(parseInt(document.getElementById(`scQ${i+1}`).value) || 0); }
     const total = scores.reduce((a, b) => a + b, 0);
     const dimScores = calculateDimensions(scores);
 
     document.querySelectorAll('.stu-name-disp').forEach(el => el.innerText = name);
     if (document.getElementById('repScore')) document.getElementById('repScore').innerText = total;
 
-    // 更新第二页表格
     for (let i = 0; i < 5; i++) {
       const tdSc = document.getElementById(`tdDimSc${i + 1}`);
       if (tdSc) tdSc.innerText = dimScores[i];
     }
     if (document.getElementById('tdScTot')) document.getElementById('tdScTot').innerText = total;
 
-    // 第一页诊断
-    if (document.getElementById('txtP1Score')) document.getElementById('txtP1Score').innerText = total;
+    // 原版文案：排名还原
     const { rank, n, percentile } = getPercentileAndRank(studentDatabase, total);
     const p1Rank = document.getElementById('txtP1Rank');
     if (p1Rank) {
       if (rank && n) { p1Rank.innerText = `第 ${rank}/${n} 名 (超越 ${percentile}%)`; } 
       else { p1Rank.innerText = `${COHORT_LABELS[getBucketIndex(total)]}`; }
     }
+    
+    // 原版文案：核心诊断语还原
     if (document.getElementById('txtP1Advice')) document.getElementById('txtP1Advice').innerHTML = buildPersonalDiagnosisText(name, total, dimScores);
 
-    // 雷达图优劣势文案 
+    // 原版文案：雷达图优劣势文案还原
     const strengths = []; const weaknesses = [];
     for (let i = 0; i < 5; i++) {
       const rate = dimScores[i] / DIM_MAX[i];
@@ -1173,33 +992,34 @@
 
     const rSTitle = document.getElementById('radarStrengthTitle'); const rSDesc = document.getElementById('radarStrengthDesc');
     if (rSTitle && rSDesc) {
-      if (strengths.length > 0) { rSTitle.innerText = '优势领跑：' + strengths.join('、'); rSDesc.innerHTML = `在 ${strengths.join('、')} 维度表现优异，建议向更高阶题型挑战。`; } 
-      else { rSTitle.innerText = '优势领跑：积累期'; rSTitle.className = 'text-[13px] font-bold text-gray-500 tracking-wide'; rSDesc.innerText = '各维度处于积累期，建议先夯实计算基本功与基础概念。'; }
+      if (strengths.length > 0) { 
+        rSTitle.innerText = '优势领跑：' + strengths.join('、'); 
+        rSDesc.innerHTML = `在 ${strengths.join('、')} 维度表现优异，建议向更高阶题型挑战。`; 
+      } else { 
+        rSTitle.innerText = '优势领跑：积累期'; rSTitle.className = 'text-[11px] font-bold text-slate-500 mb-0.5'; 
+        rSDesc.innerText = '各维度处于积累期，建议先夯实计算基本功与基础概念。'; 
+      }
     }
     const rWTitle = document.getElementById('radarWeaknessTitle'); const rWDesc = document.getElementById('radarWeaknessDesc');
     if (rWTitle && rWDesc) {
-      if (weaknesses.length > 0) { rWTitle.innerText = '进阶空间：' + weaknesses.join('、'); rWDesc.innerHTML = `需重点关注这些短板，建议通过归类易错题和专项训练进行突破。`; } 
-      else { rWTitle.innerText = '进阶空间：能力均衡无明显短板'; rWTitle.className = 'text-[13px] font-bold text-[#34C759] tracking-wide'; rWDesc.innerText = '整体能力分布较好。下一步建议全面冲刺高阶压轴题。'; }
+      if (weaknesses.length > 0) { 
+        rWTitle.innerText = '进阶空间：' + weaknesses.join('、'); 
+        rWDesc.innerHTML = `需重点关注这些短板，建议通过归类易错题和专项训练进行突破。`; 
+      } else { 
+        rWTitle.innerText = '进阶空间：能力均衡无明显短板'; rWTitle.className = 'text-[11px] font-bold text-[#0D9488] mb-0.5'; 
+        rWDesc.innerText = '整体能力分布较好。下一步建议全面冲刺高阶压轴题。'; 
+      }
     }
 
+    updatePlanningPage(name, dimScores, total);
     renderDiagnosticPages(scores);
     renderCharts(dimScores, total);
-    
-    // 更新最后一页规划推荐
-    updatePlanningPage(name, dimScores, total);
   }
 
   function wait(ms){ return new Promise(res => setTimeout(res, ms)); }
-  async function exportCurrentToPDF(filename) {
-    window.scrollTo(0, 0); 
-    const reportNode = document.getElementById('pdf-wrapper'); 
-    const opt = { margin: 0, filename, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0, scrollX: 0 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }, pagebreak: { mode: ['css', 'legacy'] } };
-    await html2pdf().set(opt).from(reportNode).save();
-  }
-
   async function exportAllStudentsPDF() {
-    if (!studentDatabase || studentDatabase.length === 0) { alert('请先导入 Excel 后再使用批量导出。'); return; }
-    if (!confirm(`将导出 ${studentDatabase.length} 份PDF（每人1份）。请允许浏览器多文件下载，是否继续？`)) return;
+    if (!studentDatabase || studentDatabase.length === 0) { alert('请先导入 Excel。'); return; }
+    if (!confirm(`将导出 ${studentDatabase.length} 份PDF，是否继续？`)) return;
 
     const noPrintEls = document.querySelectorAll('.no-print');
     noPrintEls.forEach(el => el.style.display = 'none');
@@ -1210,11 +1030,14 @@
         loadStudentData(i);
         await wait(600);
         const name = (studentDatabase[i].name || `student_${i+1}`).replace(/[\\/:*?"<>|]/g, '_');
-        await exportCurrentToPDF(`${name}_全真测评报告.pdf`);
+        window.scrollTo(0, 0); 
+        const reportNode = document.getElementById('pdf-wrapper'); 
+        const opt = { margin: 0, filename: `${name}_全真测评报告.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, backgroundColor: '#E2E8F0', scrollY: 0, scrollX: 0 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }, pagebreak: { mode: ['css', 'legacy'] } };
+        await html2pdf().set(opt).from(reportNode).save();
         await wait(350);
       }
     } catch (e) {
-      console.error(e); alert('批量导出失败：' + (e?.message || e));
+      console.error(e); alert('导出失败：' + (e?.message || e));
     } finally {
       noPrintEls.forEach(el => el.style.display = '');
       document.body.classList.remove('export-mode'); 
@@ -1222,12 +1045,20 @@
   }
 
   window.addEventListener('DOMContentLoaded', () => {
+    if (typeof Chart !== 'undefined') {
+      Chart.defaults.font.family = '"Helvetica Neue", Arial, sans-serif';
+      Chart.defaults.animation = false; 
+      if (typeof ChartDataLabels !== 'undefined') Chart.register(ChartDataLabels);
+    }
+
     const defaultScores = [8,6,8,8,6,4,4,4,6,4,8,8,4,8,4]; 
-    
     const inputsHtml = QUESTION_MAP.map((q, i) => `
-      <div class="flex items-center justify-between bg-white px-3 py-2 border border-gray-100 rounded-xl hover:shadow-sm transition-shadow">
-        <label class="text-[11px] font-medium text-gray-700 truncate pr-2 flex-1" title="${q.label}">${q.label} <span class="text-gray-400 font-normal ml-1">/${q.max}</span></label>
-        <input type="number" id="scQ${i+1}" value="${defaultScores[i]}" oninput="generateReport()" class="w-12 px-2 py-1 bg-gray-50 border border-gray-200 rounded-lg text-center font-bold text-blue-600 text-[12px] focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all">
+      <div class="flex items-center justify-between bg-white px-2 py-1.5 border-b border-gray-100 last:border-0">
+        <label class="text-[11px] text-gray-700 truncate flex-1" title="${q.label}">${q.label}</label>
+        <div class="flex items-center gap-1">
+          <input type="number" id="scQ${i+1}" value="${defaultScores[i]}" oninput="generateReport()" class="w-10 px-1 py-1 bg-slate-50 border border-slate-200 text-center font-bold text-[#002B49] text-[11px] focus:outline-none focus:border-[#0D9488]">
+          <span class="text-[10px] text-gray-400">/${q.max}</span>
+        </div>
       </div>
     `).join('');
     document.getElementById('question-inputs').innerHTML = inputsHtml;
